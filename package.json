@@ -1,0 +1,20 @@
+{
+  "name": "deckards",
+  "module": "index.ts",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "cloudflared": "^0.7.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "private": true,
+  "scripts": {
+    "dev": "bun --filter '*' dev",
+    "cloudflared": "cloudflared tunnel --url http://localhost:3000"
+  },
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ]
+}
