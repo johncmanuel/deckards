@@ -3,7 +3,8 @@
   "module": "index.ts",
   "devDependencies": {
     "@types/bun": "latest",
-    "cloudflared": "^0.7.1"
+    "cloudflared": "^0.7.1",
+    "prettier": "^3.7.4"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -11,7 +12,9 @@
   "private": true,
   "scripts": {
     "dev": "bun --filter '*' dev",
-    "cloudflared": "cloudflared tunnel --url http://localhost:3000"
+    "cloudflared": "cloudflared tunnel --url http://localhost:3000",
+    "format": "prettier --write .",
+    "check": "prettier --check ."
   },
   "type": "module",
   "workspaces": [
