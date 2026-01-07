@@ -37,7 +37,7 @@ export default config({
     // Source:
     // https://github.com/colyseus/discord-activity/blob/main/apps/server/src/app.config.ts
     app.post("/discord_token", async (req, res) => {
-      if (req.body.code === "mock_code") {
+      if (process.env.NODE_ENV !== "production" && req.body.code === "mock_code") {
         const user = {
           id: Math.random().toString(36).slice(2, 10),
           username: `User ${Math.random().toString().slice(2, 10)}`,
