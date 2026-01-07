@@ -1,20 +1,18 @@
 import { useState, useEffect } from "react";
 import {
-  createLobbyServer,
-  joinLobbyServerById,
   colyseusClient,
   joinOrCreateLobbyServer,
 } from "../utils/colyseusClient";
 import { type Room } from "colyseus.js";
-import { discordSDK, isEmbedded } from "../utils/discord";
+import { discordSDK } from "../utils/discord";
 import { authenticate } from "../utils/auth";
 
 type Joined = { id: string; name: string; clients: number };
 
 export function Lobby() {
-  const [playerName, setPlayerName] = useState("");
-  const [lobbyName, setLobbyName] = useState("");
-  const [joinId, setJoinId] = useState("");
+  // const [playerName, setPlayerName] = useState("");
+  // const [lobbyName, setLobbyName] = useState("");
+  // const [joinId, setJoinId] = useState("");
   const [joinedRoom, setJoinedRoom] = useState<Room | null>(null);
   const [joinedInfo, setJoinedInfo] = useState<Joined | null>(null);
 
@@ -33,7 +31,7 @@ export function Lobby() {
         }
 
         const room = await joinOrCreateLobbyServer({
-          username: playerName,
+          username: data.user.username,
           channelId: discordSDK.channelId,
         });
 
@@ -42,16 +40,31 @@ export function Lobby() {
           return;
         }
 
+        // not sure if this works but let's see when i actually use discord
+        room.onStateChange((state) => {
+          console.log("Lobby room state changed");
+          setJoinedInfo((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  clients: state.clients?.length ?? prev.clients,
+                }
+              : prev,
+          );
+        });
+
         setJoinedRoom(room);
         setJoinedInfo({
           id: discordSDK.channelId,
-          name: lobbyName || room.roomId,
-          clients: room.clients || 1,
+          name: data.user.username,
+          clients: room.clients || 1, // TODO: fix this to match actual count
         });
+
         room.onLeave(() => {
           setJoinedRoom(null);
           setJoinedInfo(null);
         });
+
         room.onMessage("switch_game", (m: any) => console.log("switch_game", m));
       } catch (err) {
         console.error("Authentication error:", err);
@@ -98,16 +111,16 @@ export function Lobby() {
   //     }
   //   }
 
-  async function leaveLobby() {
-    if (!joinedRoom) return;
-    try {
-      await joinedRoom.leave();
-    } catch (err) {
-      console.error(err);
-    }
-    setJoinedRoom(null);
-    setJoinedInfo(null);
-  }
+  // async function leaveLobby() {
+  //   if (!joinedRoom) return;
+  //   try {
+  //     await joinedRoom.leave();
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  //   setJoinedRoom(null);
+  //   setJoinedInfo(null);
+  // }
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-[#1f1f1f] rounded-lg shadow-md">
@@ -160,7 +173,7 @@ export function Lobby() {
       {joinedInfo && (
         <div className="mt-2">
           <div className="mb-2">
-            Joined lobby: <strong>{joinedInfo.name}</strong>
+            Joined lobby as: <strong>{joinedInfo.name}</strong>
           </div>
 
           <div className="mb-2 flex items-center gap-3">
@@ -180,11 +193,12 @@ export function Lobby() {
           </div>
 
           <div className="mb-3">Players: {joinedInfo.clients}</div>
-          <div className="flex gap-2">
+          {/* Players can leave the channel on Discord */}
+          {/* <div className="flex gap-2">
             <button onClick={leaveLobby} className="px-3 py-1 bg-[#ef4444] rounded">
               Leave
             </button>
-          </div>
+          </div> */}
         </div>
       )}
 

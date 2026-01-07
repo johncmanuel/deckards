@@ -8,26 +8,6 @@ function getEndpoint() {
 
 export const colyseusClient = new Client(getEndpoint());
 
-export async function createLobbyServer(name: string, options: any = {}): Promise<Room | null> {
-  try {
-    const room = await colyseusClient.create("lobby", { ...options, name });
-    return room;
-  } catch (err) {
-    console.error("createLobbyServer error", err);
-    return null;
-  }
-}
-
-export async function joinLobbyServerById(id: string, options: any = {}): Promise<Room | null> {
-  try {
-    const room = await colyseusClient.joinById(id, options);
-    return room;
-  } catch (err) {
-    console.error("joinLobbyServerById error", err);
-    return null;
-  }
-}
-
 export async function joinOrCreateLobbyServer(options: any = {}): Promise<Room | null> {
   try {
     const room = await colyseusClient.joinOrCreate("lobby", options);
