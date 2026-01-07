@@ -28,9 +28,25 @@ export class Player extends Schema {
   }
 }
 
+export const ACTIVE_GAMES = {
+  NONE: "NONE",
+  BLACKJACK: "BLACKJACK",
+  BS: "BS",
+}
+
+export const ACTIVITIES = {
+  LOBBY: "LOBBY",
+  VOTING: "VOTING",
+  PLAYING: "PLAYING",
+}
+
+export type VoteGameMessage = {
+  game: keyof typeof ACTIVE_GAMES;
+}
+
 export class GameState extends Schema {
-  @type("string") currentActivity: "LOBBY" | "VOTING" | "PLAYING" = "LOBBY";
-  @type("string") activeGame: "NONE" | "BLACKJACK" | "BS" = "NONE";
+  @type("string") currentActivity = ACTIVITIES.LOBBY;
+  @type("string") activeGame = ACTIVE_GAMES.NONE;
 
   // "sessionId" => Player
   @type({ map: Player }) players = new MapSchema<Player>();

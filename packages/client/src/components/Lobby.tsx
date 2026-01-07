@@ -3,7 +3,7 @@ import { colyseusClient, joinOrCreateLobbyServer } from "../utils/colyseusClient
 import { type Room } from "colyseus.js";
 import { discordSDK } from "../utils/discord";
 import { authenticate } from "../utils/auth";
-import { GameState } from "@deckards/common";
+import { GameState, type VoteGameMessage } from "@deckards/common";
 
 type Joined = { id: string; name: string; clients: number };
 
@@ -45,16 +45,18 @@ export function Lobby() {
           clients: initialCount || 1,
         });
 
-        const updateCount = () => {
+        const updateRoom = () => {
           setJoinedInfo((prev) => (prev ? { ...prev, clients: room.state.players.size } : prev));
+          setJoinedRoom((prev) => (prev ? room : prev));
         };
-        room.onStateChange(updateCount);
+        room.onStateChange(updateRoom);
 
         room.onLeave(() => {
           setJoinedRoom(null);
           setJoinedInfo(null);
         });
 
+        // switch to the appropiate game room when the lobby signals to do so
         room.onMessage("switch_game", (m: any) => console.log("switch_game", m));
       } catch (err) {
         console.error("Authentication error:", err);
@@ -67,6 +69,15 @@ export function Lobby() {
       joinLobby();
     }, 50);
   }, [joinedRoom]);
+
+  const handleStartGame = () => {
+    if (joinedRoom) {
+      // default to blackjack for now
+      // in future, show game selection UI below
+      const options: VoteGameMessage = { game: "BLACKJACK" };
+      joinedRoom.send("vote_game", options);
+    }
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-[#1f1f1f] rounded-lg shadow-md">
@@ -96,11 +107,11 @@ export function Lobby() {
 
           <div className="mb-3">Players: {joinedInfo.clients}</div>
           {/* Players can leave the channel on Discord */}
-          {/* <div className="flex gap-2">
-            <button onClick={leaveLobby} className="px-3 py-1 bg-[#ef4444] rounded">
-              Leave
+          <div className="flex gap-2">
+            <button onClick={handleStartGame} className="px-3 py-1 bg-[#ef4444] rounded">
+              Start Game 
             </button>
-          </div> */}
+          </div>
         </div>
       )}
 
