@@ -1,0 +1,14 @@
+{
+  "name": "@deckards/common",
+  "version": "0.1.0",
+  "private": true,
+    "main": "dist/index.js",   
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@colyseus/schema": "^3.0.76"
+  }
+}

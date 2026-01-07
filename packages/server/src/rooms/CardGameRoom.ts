@@ -1,5 +1,5 @@
 import { Room, Client } from "colyseus";
-import { GameState, Card } from "./schema/GameState";
+import { GameState, Card } from "@deckards/common";
 
 export abstract class CardGameRoom<TState extends GameState> extends Room<TState> {
   protected SUITS = ["H", "D", "C", "S"];

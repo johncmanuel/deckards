@@ -1,4 +1,4 @@
-import { type, MapSchema, ArraySchema } from "@colyseus/schema";
+import { type, ArraySchema } from "@colyseus/schema";
 import { Player, GameState, Card } from "./GameState";
 
 export class BlackjackPlayer extends Player {

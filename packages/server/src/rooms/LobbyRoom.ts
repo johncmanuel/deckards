@@ -1,5 +1,5 @@
 import { Room, Client } from "@colyseus/core";
-import { Player, GameState } from "./schema/GameState";
+import { Player, GameState } from "@deckards/common";
 
 export class LobbyRoom extends Room<GameState> {
   onCreate(options: any) {
@@ -16,7 +16,7 @@ export class LobbyRoom extends Room<GameState> {
   }
 
   onJoin(client: Client, options: any) {
-    console.log(client.sessionId, "joined!");
+    console.log(options.username, "joined:", options.channelId);
 
     // TODO: account for players joining w/ discord context
     const newPlayer = new Player(
@@ -29,7 +29,7 @@ export class LobbyRoom extends Room<GameState> {
   }
 
   onLeave(client: Client, consented: boolean) {
-    console.log(client.sessionId, "left!");
+    console.log(this.state.players.get(client.sessionId)?.name, "left!");
     this.state.players.delete(client.sessionId);
   }
 

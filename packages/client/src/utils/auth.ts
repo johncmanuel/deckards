@@ -1,6 +1,7 @@
 // https://github.com/colyseus/discord-activity/blob/main/apps/client/src/utils/Auth.ts
 import { discordSDK, DISCORD_CLIENT_ID } from "./discord";
 import colyseusClient from "./colyseusClient";
+import type { DiscordTokenResponse } from "@deckards/common";
 
 export async function authenticate() {
   await discordSDK.ready();
@@ -38,10 +39,11 @@ export async function authenticate() {
     ],
   });
 
-  const { data } = await colyseusClient.http.post("/discord_token", {
+  const resp = await colyseusClient.http.post("/discord_token", {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ code }),
   });
+  const data = (resp as any).data as DiscordTokenResponse;
 
   if (!data.access_token) {
     throw new Error(

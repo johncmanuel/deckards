@@ -14,10 +14,11 @@
   "private": true,
   "scripts": {
     "dev": "bun --filter '*' dev",
-    "cloudflared": "cloudflared tunnel --url http://localhost:3000",
-    "format": "prettier --write .",
+    "cloudflared": "cloudflared tunnel --url http://localhost:5173",
+    "fmt": "prettier --write .",
     "check": "prettier --check .",
-    "jwt:gen": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+    "jwt:gen": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
+    "watch:common": "bun run --filter '@deckards/common' watch"
   },
   "type": "module",
   "workspaces": [

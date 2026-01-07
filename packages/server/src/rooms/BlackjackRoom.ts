@@ -1,6 +1,6 @@
 import { Client } from "colyseus";
 import { CardGameRoom } from "./CardGameRoom";
-import { BlackjackPlayer, BlackjackState } from "./schema/BlackjackState";
+import { BlackjackPlayer, BlackjackState } from "@deckards/common";
 import { calculateHandScore } from "../utils/blackjack";
 
 export class BlackjackRoom extends CardGameRoom<BlackjackState> {

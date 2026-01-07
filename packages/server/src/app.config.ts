@@ -9,6 +9,7 @@ import { JWT } from "@colyseus/auth";
 import { LobbyRoom } from "./rooms/LobbyRoom";
 import { BlackjackRoom } from "./rooms/BlackjackRoom";
 import { json } from "express";
+import type { DiscordTokenResponse, DiscordUser } from "@deckards/common";
 
 export default config({
   // options: {
@@ -32,17 +33,22 @@ export default config({
       res.send("It's time to kick ass and chew bubblegum!");
     });
 
-    app.use(json())
+    app.use(json());
 
     // Source:
     // https://github.com/colyseus/discord-activity/blob/main/apps/server/src/app.config.ts
     app.post("/discord_token", async (req, res) => {
       if (process.env.NODE_ENV !== "production" && req.body.code === "mock_code") {
-        const user = {
+        const user: DiscordUser = {
           id: Math.random().toString(36).slice(2, 10),
           username: `User ${Math.random().toString().slice(2, 10)}`,
         };
-        res.send({ access_token: "mocked", token: await JWT.sign(user), user });
+        const payload: DiscordTokenResponse = {
+          access_token: "mocked",
+          token: await JWT.sign(user),
+          user,
+        };
+        res.send(payload);
         console.log("Mock code used, returning mocked token and user.");
         return;
       }
@@ -75,13 +81,15 @@ export default config({
           })
         ).json();
 
-        const user = profile;
+        const user: DiscordUser = profile;
 
-        res.send({
+        const payload: DiscordTokenResponse = {
           access_token,
           token: await JWT.sign(user), // Colyseus JWT token
           user,
-        });
+        };
+
+        res.send(payload);
       } catch (e: any) {
         res.status(400).send({ error: e.message });
       }
