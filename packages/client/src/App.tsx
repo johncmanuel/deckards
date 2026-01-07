@@ -16,7 +16,7 @@ export function App() {
 
       <h1 className="text-4xl font-bold my-2 leading-tight">Deckards</h1>
 
-        <div className="mt-6">
+      <div className="mt-6">
         <Lobby />
       </div>
     </div>

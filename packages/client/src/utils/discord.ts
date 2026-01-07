@@ -18,7 +18,11 @@ if (isEmbedded) {
   discordSDK = new DiscordSDK(DISCORD_CLIENT_ID);
 } else {
   // @ts-ignore: shouldn't be a problem with the typings here
-  enum SessionStorageQueryParam { user_id = 'user_id', guild_id = 'guild_id', channel_id = 'channel_id', }
+  enum SessionStorageQueryParam {
+    user_id = "user_id",
+    guild_id = "guild_id",
+    channel_id = "channel_id",
+  }
 
   function getOverrideOrRandomSessionValue(queryParam: `${SessionStorageQueryParam}`) {
     const overrideValue = queryParams.get(queryParam);
