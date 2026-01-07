@@ -1,4 +1,4 @@
-import { Card } from "@deckards/common"
+import { Card } from "@deckards/common";
 
 export function calculateHandScore(hand: Card[] | any): number {
   let score = 0;

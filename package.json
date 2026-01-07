@@ -18,7 +18,8 @@
     "fmt": "prettier --write .",
     "check": "prettier --check .",
     "jwt:gen": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
-    "watch:common": "bun run --filter '@deckards/common' watch"
+    "watch:common": "bun run --filter '@deckards/common' watch",
+    "build:common": "bun run --filter '@deckards/common' build"
   },
   "type": "module",
   "workspaces": [
