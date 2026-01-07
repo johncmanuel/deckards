@@ -3,8 +3,10 @@
   "module": "index.ts",
   "devDependencies": {
     "@types/bun": "latest",
+    "@vitejs/plugin-react": "^5.1.2",
     "cloudflared": "^0.7.1",
-    "prettier": "^3.7.4"
+    "prettier": "^3.7.4",
+    "vite": "^7.3.0"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -14,7 +16,8 @@
     "dev": "bun --filter '*' dev",
     "cloudflared": "cloudflared tunnel --url http://localhost:3000",
     "format": "prettier --write .",
-    "check": "prettier --check ."
+    "check": "prettier --check .",
+    "jwt:gen": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
   },
   "type": "module",
   "workspaces": [

@@ -4,17 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --hot src/index.ts",
-    "start": "NODE_ENV=production bun src/index.ts",
-    "build": "bun run build.ts"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.4.0",
-    "bun-plugin-tailwind": "^0.1.2",
+    "@tailwindcss/vite": "^4.1.18",
     "colyseus.js": "^0.16.22",
     "react": "^19",
     "react-dom": "^19",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "@types/react": "^19",

@@ -1,18 +1,26 @@
 import config from "@colyseus/tools";
 import { monitor } from "@colyseus/monitor";
 import { playground } from "@colyseus/playground";
+import { JWT } from "@colyseus/auth";
 
 /**
  * Import your Room files
  */
-import { MyRoom } from "./rooms/MyRoom";
+import { LobbyRoom } from "./rooms/LobbyRoom";
+import { BlackjackRoom } from "./rooms/BlackjackRoom";
+import { json } from "express";
 
 export default config({
+  // options: {
+  //   devMode: process.env.NODE_ENV !== "production",
+  // },
+
   initializeGameServer: (gameServer) => {
     /**
      * Define your room handlers:
      */
-    gameServer.define("my_room", MyRoom);
+    gameServer.define("lobby", LobbyRoom).filterBy(["channelId"]);
+    gameServer.define("blackjack", BlackjackRoom);
   },
 
   initializeExpress: (app) => {
@@ -22,6 +30,61 @@ export default config({
      */
     app.get("/hello_world", (req, res) => {
       res.send("It's time to kick ass and chew bubblegum!");
+    });
+
+    app.use(json())
+
+    // Source:
+    // https://github.com/colyseus/discord-activity/blob/main/apps/server/src/app.config.ts
+    app.post("/discord_token", async (req, res) => {
+      if (req.body.code === "mock_code") {
+        const user = {
+          id: Math.random().toString(36).slice(2, 10),
+          username: `User ${Math.random().toString().slice(2, 10)}`,
+        };
+        res.send({ access_token: "mocked", token: await JWT.sign(user), user });
+        console.log("Mock code used, returning mocked token and user.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`https://discord.com/api/oauth2/token`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            client_id: process.env.DISCORD_CLIENT_ID,
+            client_secret: process.env.DISCORD_CLIENT_SECRET,
+            grant_type: "authorization_code",
+            code: req.body.code,
+          }),
+        });
+
+        // discord access token
+        const { access_token } = await response.json();
+
+        // user data
+        const profile = await (
+          await fetch(`https://discord.com/api/users/@me`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              Authorization: `Bearer ${access_token}`,
+            },
+          })
+        ).json();
+
+        const user = profile;
+
+        res.send({
+          access_token,
+          token: await JWT.sign(user), // Colyseus JWT token
+          user,
+        });
+      } catch (e: any) {
+        res.status(400).send({ error: e.message });
+      }
     });
 
     /**
@@ -37,7 +100,9 @@ export default config({
      * It is recommended to protect this route with a password
      * Read more: https://docs.colyseus.io/tools/monitor/#restrict-access-to-the-panel-using-a-password
      */
-    app.use("/monitor", monitor());
+    if (process.env.NODE_ENV !== "production") {
+      app.use("/colyseus", monitor());
+    }
   },
 
   beforeListen: () => {
