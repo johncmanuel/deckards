@@ -175,7 +175,35 @@ export function Game() {
                 </button>
               </div>
 
-              <div className="mb-3">Players: {joinedInfo.clients}</div>
+              <div className="mb-3">
+                <div className="text-sm text-gray-300 mb-2">Players: {joinedInfo.clients}</div>
+                <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
+                  {joinedRoom && Array.from(joinedRoom.state.players.values()).map((player) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-3 bg-[#2a2a2a] px-3 py-2 rounded"
+                    >
+                      {player.avatarUrl ? (
+                        <img
+                          src={player.avatarUrl}
+                          alt={player.username}
+                          className="w-10 h-10 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-semibold">
+                          {player.username.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <p className="text-white font-medium">{player.username}</p>
+                        {player.id === joinedRoom.state.lobbyLeader && (
+                          <span className="text-xs text-yellow-400">Leader</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               {joinedInfo.isLeader && (
                 <div className="flex flex-col gap-2">
