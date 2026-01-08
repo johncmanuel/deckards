@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { extend, Application } from "@pixi/react";
 import { Container, Sprite, Texture, TextureSource, Assets, DEPRECATED_SCALE_MODES } from "pixi.js";
 import { Room } from "colyseus.js";
-import { BlackjackState, type BlackjackPlayer, type Card as ServerCard } from "@deckards/common";
+import { BlackjackState, type BlackjackPlayer, type Card as ServerCard, calculateHandScore } from "@deckards/common";
 
 extend({ Container, Sprite });
 
@@ -50,29 +50,9 @@ function serverCardToClientCard(serverCard: ServerCard): Card {
 }
 
 function calculateVisibleScore(hand: Card[]): number {
-  let score = 0;
-  let aces = 0;
-
-  for (const card of hand) {
-    if (card.isHidden) continue;
-
-    if (["J", "Q", "K"].includes(card.rank)) {
-      score += 10;
-    } else if (card.rank === "A") {
-      aces += 1;
-      score += 11;
-    } else {
-      score += parseInt(card.rank);
-    }
-  }
-
-  // downgrade aces from 11 to 1 if over 21
-  while (score > 21 && aces > 0) {
-    score -= 10;
-    aces -= 1;
-  }
-
-  return score;
+  // Filter out hidden cards and calculate score using shared utility
+  const visibleCards = hand.filter(card => !card.isHidden);
+  return calculateHandScore(visibleCards);
 }
 
 function formatObfuscatedScore(hand: Card[], fullScore: number): string {
@@ -158,6 +138,9 @@ export function Blackjack({
       }
 
       // update other players
+      // TODO: this could be exploited by other clients to see hidden cards
+      // need to implement Schema Filters on server and modify the below logic to
+      // adapt to these filters
       const others: Array<{ username: string; hand: Card[]; score: number; displayScore: string }> =
         [];
       room.state.players.forEach((p, sessionId) => {

@@ -1,4 +1,4 @@
-import { Card } from "@deckards/common";
+import { Card } from "./GameState";
 
 export function calculateHandScore(hand: Card[] | any): number {
   let score = 0;
@@ -13,12 +13,12 @@ export function calculateHandScore(hand: Card[] | any): number {
       aces += 1;
       score += 11;
     } else {
-      // Parse "2" through "10"
+      // parse "2" through "10"
       score += parseInt(card.rank);
     }
   }
 
-  // Downgrade Aces from 11 to 1 if we are over 21
+  // downgrade aces from 11 to 1 if over 21
   while (score > 21 && aces > 0) {
     score -= 10;
     aces -= 1;

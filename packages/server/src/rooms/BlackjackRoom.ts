@@ -1,8 +1,8 @@
 import { Client } from "colyseus";
 import { CardGameRoom } from "./CardGameRoom";
 import { BlackjackPlayer, BlackjackState } from "@deckards/common";
-import { calculateHandScore } from "../utils/blackjack";
 import { Delayed } from "colyseus";
+import { calculateHandScore } from "@deckards/common";
 
 export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   private autoStartTimer?: Delayed;
