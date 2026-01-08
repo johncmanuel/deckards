@@ -132,7 +132,7 @@ export function Blackjack() {
           <RenderHand hand={dealerHand} startX={window.innerWidth / 2 - cardWidth} startY={100} />
 
           {/* Player Hand */}
-          <RenderHand hand={playerHand} startX={window.innerWidth / 2 - cardWidth} startY={400} />
+          <RenderHand hand={playerHand} startX={window.innerWidth / 2 - cardWidth} startY={630} />
         </Application>
       </div>
 
