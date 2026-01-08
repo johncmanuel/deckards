@@ -32,17 +32,17 @@ export const ACTIVE_GAMES = {
   NONE: "NONE",
   BLACKJACK: "BLACKJACK",
   BS: "BS",
-}
+};
 
 export const ACTIVITIES = {
   LOBBY: "LOBBY",
   VOTING: "VOTING",
   PLAYING: "PLAYING",
-}
+};
 
 export type VoteGameMessage = {
   game: keyof typeof ACTIVE_GAMES;
-}
+};
 
 export class GameState extends Schema {
   @type("string") currentActivity = ACTIVITIES.LOBBY;

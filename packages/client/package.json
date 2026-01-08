@@ -9,13 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@deckards/common": "*",
     "@discord/embedded-app-sdk": "^2.4.0",
+    "@pixi/react": "^8.0.5",
     "@tailwindcss/vite": "^4.1.18",
     "colyseus.js": "^0.16.22",
+    "pixi.js": "^8.15.0",
     "react": "^19",
     "react-dom": "^19",
-    "tailwindcss": "^4.1.18",
-    "@deckards/common": "*"
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "@types/react": "^19",

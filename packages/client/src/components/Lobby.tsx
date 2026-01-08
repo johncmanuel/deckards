@@ -4,6 +4,7 @@ import { type Room } from "colyseus.js";
 import { discordSDK } from "../utils/discord";
 import { authenticate } from "../utils/auth";
 import { GameState, type VoteGameMessage } from "@deckards/common";
+import Blackjack from "./Blackjack";
 
 type Joined = { id: string; name: string; clients: number };
 
@@ -77,7 +78,7 @@ export function Lobby() {
       const options: VoteGameMessage = { game: "BLACKJACK" };
       joinedRoom.send("vote_game", options);
     }
-  }
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-[#1f1f1f] rounded-lg shadow-md">
@@ -109,7 +110,7 @@ export function Lobby() {
           {/* Players can leave the channel on Discord */}
           <div className="flex gap-2">
             <button onClick={handleStartGame} className="px-3 py-1 bg-[#ef4444] rounded">
-              Start Game 
+              Start Game
             </button>
           </div>
         </div>

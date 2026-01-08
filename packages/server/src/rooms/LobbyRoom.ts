@@ -1,5 +1,11 @@
 import { Room, Client } from "@colyseus/core";
-import { Player, GameState, ACTIVE_GAMES, ACTIVITIES, type VoteGameMessage } from "@deckards/common";
+import {
+  Player,
+  GameState,
+  ACTIVE_GAMES,
+  ACTIVITIES,
+  type VoteGameMessage,
+} from "@deckards/common";
 
 export class LobbyRoom extends Room<GameState> {
   onCreate(options: any) {
