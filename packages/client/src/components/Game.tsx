@@ -73,7 +73,7 @@ export function Game() {
             prev
               ? {
                   ...prev,
-                  clients: room.state.players.size,
+                  clients: room.state.players?.size ?? 1,
                   isLeader: updatedIsLeader,
                 }
               : prev,
@@ -178,7 +178,7 @@ export function Game() {
               <div className="mb-3">
                 <div className="text-sm text-gray-300 mb-2">Players: {joinedInfo.clients}</div>
                 <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                  {joinedRoom && Array.from(joinedRoom.state.players.values()).map((player) => (
+                  {joinedRoom && joinedRoom.state.players && Array.from(joinedRoom.state.players.values()).map((player) => (
                     <div
                       key={player.id}
                       className="flex items-center gap-3 bg-[#2a2a2a] px-3 py-2 rounded"

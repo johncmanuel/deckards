@@ -275,12 +275,12 @@ export function Blackjack({
               key={other.username}
               hand={other.hand}
               startX={50}
-              startY={200 + idx * 180}
+              startY={200 + idx * 250}
             />
           ))}
 
           {playerHand.length > 0 && (
-            <RenderHand hand={playerHand} startX={window.innerWidth / 2 - cardWidth} startY={630} />
+            <RenderHand hand={playerHand} startX={window.innerWidth / 2 - cardWidth} startY={610} />
           )}
         </Application>
       </div>
@@ -292,9 +292,13 @@ export function Blackjack({
         </div>
 
         {otherPlayers.length > 0 && (
-          <div className="absolute left-8 top-[200px] flex flex-col gap-4">
-            {otherPlayers.map((other, _) => (
-              <div key={other.username} className="bg-black/50 px-3 py-2 rounded">
+          <div className="absolute left-8">
+            {otherPlayers.map((other, idx) => (
+              <div 
+                key={other.username} 
+                className="bg-black/50 px-3 py-2 rounded absolute"
+                style={{ top: `${50 + idx * 280}px` }}
+              >
                 <p className="text-blue-400 font-semibold text-sm">{other.username}</p>
                 <p className="text-blue-200/80 text-xs">Score: {other.displayScore}</p>
               </div>
