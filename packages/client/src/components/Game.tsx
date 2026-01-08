@@ -94,7 +94,13 @@ export function Game() {
               const gameRoom = await consumeSeatReservation(message.reservation);
               if (gameRoom) {
                 setBlackjackRoom(gameRoom);
-                // await room.leave();
+
+                // Listen for when the player leaves the blackjack room
+                gameRoom.onLeave(() => {
+                  console.log("Left blackjack room, returning to lobby");
+                  setBlackjackRoom(null);
+                  // Keep the lobby room active - don't leave it
+                });
               }
             } catch (err) {
               console.error("Failed to consume seat reservation", err);
@@ -201,7 +207,7 @@ export function Game() {
         </div>
       )}
 
-      {blackjackRoom && <Blackjack room={blackjackRoom} />}
+      {blackjackRoom && <Blackjack room={blackjackRoom} onLeave={() => setBlackjackRoom(null)} />}
     </>
   );
 }

@@ -11,4 +11,5 @@ export class BlackjackState extends GameState {
   // @type({ map: BlackjackPlayer }) players = new MapSchema<BlackjackPlayer>();
   @type("number") dealerScore: number = 0;
   @type([Card]) dealerHand = new ArraySchema<Card>();
+  @type("string") gameLeader: string = "";
 }

@@ -49,18 +49,63 @@ function serverCardToClientCard(serverCard: ServerCard): Card {
   };
 }
 
-export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
+function calculateVisibleScore(hand: Card[]): number {
+  let score = 0;
+  let aces = 0;
+
+  for (const card of hand) {
+    if (card.isHidden) continue;
+
+    if (["J", "Q", "K"].includes(card.rank)) {
+      score += 10;
+    } else if (card.rank === "A") {
+      aces += 1;
+      score += 11;
+    } else {
+      score += parseInt(card.rank);
+    }
+  }
+
+  // downgrade aces from 11 to 1 if over 21
+  while (score > 21 && aces > 0) {
+    score -= 10;
+    aces -= 1;
+  }
+
+  return score;
+}
+
+function formatObfuscatedScore(hand: Card[], fullScore: number): string {
+  const hasHiddenCards = hand.some((c) => c.isHidden);
+
+  if (!hasHiddenCards) {
+    return fullScore.toString();
+  }
+
+  const visibleScore = calculateVisibleScore(hand);
+  return visibleScore > 0 ? `? + ${visibleScore}` : "?";
+}
+
+export function Blackjack({
+  room,
+  onLeave,
+}: {
+  room?: Room<BlackjackState>;
+  onLeave?: () => void;
+}) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
   const [dealerHand, setDealerHand] = useState<Card[]>([]);
   const [otherPlayers, setOtherPlayers] = useState<
-    Array<{ username: string; hand: Card[]; score: number }>
+    Array<{ username: string; hand: Card[]; score: number; displayScore: string }>
   >([]);
   const [playerScore, setPlayerScore] = useState(0);
   const [dealerScore, setDealerScore] = useState(0);
+  const [dealerDisplayScore, setDealerDisplayScore] = useState<string>("?");
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
+  const [isLeader, setIsLeader] = useState(false);
 
   useEffect(() => {
     async function loadAssets() {
@@ -99,8 +144,13 @@ export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
     const updateGameState = () => {
       const currentPlayer = room.state.players.get(room.sessionId) as BlackjackPlayer | undefined;
 
+      setIsLeader(room.sessionId === room.state.gameLeader);
+
       if (currentPlayer) {
-        const playerCards = Array.from(currentPlayer.hand).map(serverCardToClientCard);
+        const playerCards = Array.from(currentPlayer.hand).map((serverCard) => {
+          const card = serverCardToClientCard(serverCard);
+          return { ...card, isHidden: false }; // always show own cards
+        });
 
         setPlayerHand(playerCards);
         setPlayerScore(currentPlayer.roundScore);
@@ -108,14 +158,17 @@ export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
       }
 
       // update other players
-      const others: Array<{ username: string; hand: Card[]; score: number }> = [];
+      const others: Array<{ username: string; hand: Card[]; score: number; displayScore: string }> =
+        [];
       room.state.players.forEach((p, sessionId) => {
         if (sessionId !== room.sessionId) {
           const player = p as BlackjackPlayer;
+          const hand = Array.from(player.hand).map(serverCardToClientCard);
           others.push({
             username: player.username,
-            hand: Array.from(player.hand).map(serverCardToClientCard),
+            hand: hand,
             score: player.roundScore,
+            displayScore: formatObfuscatedScore(hand, player.roundScore),
           });
         }
       });
@@ -124,6 +177,7 @@ export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
       const dealerCards = Array.from(room.state.dealerHand).map(serverCardToClientCard);
       setDealerHand(dealerCards);
       setDealerScore(room.state.dealerScore);
+      setDealerDisplayScore(formatObfuscatedScore(dealerCards, room.state.dealerScore));
 
       // game starts if there are cards
       setIsGameStarted(dealerCards.length > 0 || (currentPlayer?.hand.length ?? 0) > 0);
@@ -138,6 +192,10 @@ export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
       setCanPlay(false);
     });
 
+    room.onMessage("round_started", () => {
+      setIsGameOver(false);
+    });
+
     return () => {
       room.removeAllListeners();
     };
@@ -146,7 +204,6 @@ export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
   const handleStartGame = () => {
     if (room) {
       room.send("start_game");
-      setIsGameOver(false);
     }
   };
 
@@ -159,6 +216,21 @@ export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
   const handleStand = () => {
     if (room && canPlay) {
       room.send("stand");
+    }
+  };
+
+  const handleLeave = async () => {
+    if (room) {
+      try {
+        await room.leave();
+        console.log("Successfully left blackjack room");
+        // notify parent component to switch back to lobby
+        if (onLeave) {
+          onLeave();
+        }
+      } catch (err) {
+        console.error("Error leaving blackjack room:", err);
+      }
     }
   };
 
@@ -206,8 +278,6 @@ export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
     );
   }
 
-  const visibleDealerScore = dealerHand.filter((c) => !c.isHidden).length > 0 ? dealerScore : "?";
-
   return (
     <div className="relative w-screen h-screen bg-[#101010] overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -235,7 +305,7 @@ export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
       <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-8">
         <div className="flex flex-col items-center">
           <h2 className="text-yellow-400 text-3xl font-bold drop-shadow-md">Dealer</h2>
-          <p className="text-yellow-200/80 text-sm">Score: {visibleDealerScore}</p>
+          <p className="text-yellow-200/80 text-sm">Score: {dealerDisplayScore}</p>
         </div>
 
         {otherPlayers.length > 0 && (
@@ -243,7 +313,7 @@ export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
             {otherPlayers.map((other, _) => (
               <div key={other.username} className="bg-black/50 px-3 py-2 rounded">
                 <p className="text-blue-400 font-semibold text-sm">{other.username}</p>
-                <p className="text-blue-200/80 text-xs">Score: {other.score || "?"}</p>
+                <p className="text-blue-200/80 text-xs">Score: {other.displayScore}</p>
               </div>
             ))}
           </div>
@@ -256,7 +326,7 @@ export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
           </div>
 
           <div className="flex gap-4 pointer-events-auto pb-10">
-            {!isGameStarted && (
+            {!isGameStarted && isLeader && (
               <button
                 className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold shadow-lg transition-transform active:scale-95"
                 onClick={handleStartGame}
@@ -294,13 +364,29 @@ export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
             )}
 
             {isGameOver && (
-              <button
-                className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold shadow-lg transition-transform active:scale-95"
-                onClick={handleStartGame}
-              >
-                NEW ROUND
-              </button>
+              <>
+                {isLeader && (
+                  <button
+                    className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold shadow-lg transition-transform active:scale-95"
+                    onClick={handleStartGame}
+                  >
+                    NEW ROUND
+                  </button>
+                )}
+                {!isLeader && (
+                  <div className="px-6 py-2 text-gray-400 text-sm">
+                    Waiting for leader to start new round...
+                  </div>
+                )}
+              </>
             )}
+
+            <button
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded font-bold shadow-lg transition-transform active:scale-95"
+              onClick={handleLeave}
+            >
+              LEAVE
+            </button>
           </div>
         </div>
       </div>

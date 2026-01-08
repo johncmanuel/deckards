@@ -2,14 +2,25 @@ import { Client } from "colyseus";
 import { CardGameRoom } from "./CardGameRoom";
 import { BlackjackPlayer, BlackjackState } from "@deckards/common";
 import { calculateHandScore } from "../utils/blackjack";
+import { Delayed } from "colyseus";
 
 export class BlackjackRoom extends CardGameRoom<BlackjackState> {
+  private autoStartTimer?: Delayed;
+  private readonly AUTO_START_DELAY_MS = 10000;
+
   onCreate(options: any) {
     this.state = new BlackjackState();
 
     super.onCreate(options);
 
-    this.onMessage("start_game", (client) => this.startRound());
+    this.onMessage("start_game", (client) => {
+      if (client.sessionId !== this.state.gameLeader) {
+        console.warn(`Non-leader ${client.sessionId} attempted to start round`);
+        client.send("error", { message: "Only the game leader can start a new round." });
+        return;
+      }
+      this.startRound();
+    });
     this.onMessage("hit", (client) => this.handleHit(client));
     this.onMessage("stand", (client) => this.handleStand(client));
   }
@@ -17,7 +28,11 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   onJoin(client: Client, options: any) {
     console.log(options.username, "joined:", options.channelId, "in blackjack room");
 
-    // TODO: account for players joining w/ discord context
+    if (this.state.players.size === 0) {
+      this.state.gameLeader = client.sessionId;
+      console.log(`${options.username} is the game leader`);
+    }
+
     const newPlayer = new BlackjackPlayer(
       client.sessionId,
       options.username || "Guest",
@@ -30,9 +45,26 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   onLeave(client: Client, consented: boolean) {
     console.log(this.state.players.get(client.sessionId)?.username, "left!");
     this.state.players.delete(client.sessionId);
+
+    // if game leader leaves, assign a new leader
+    if (client.sessionId === this.state.gameLeader) {
+      const remainingPlayers = Array.from(this.state.players.keys());
+      if (remainingPlayers.length > 0) {
+        this.state.gameLeader = remainingPlayers[0];
+        console.log(`New game leader: ${this.state.gameLeader}`);
+      } else {
+        this.state.gameLeader = "";
+      }
+    }
+  }
+
+  onDispose() {
+    this.clearAutoStartTimer();
   }
 
   startRound() {
+    this.clearAutoStartTimer();
+
     if (this.state.players.size < 2) {
       console.warn("Cannot start blackjack with less than 2 players");
       this.broadcast("error", { message: "Need at least 2 players to start" });
@@ -41,6 +73,8 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
 
     this.lock();
     this.shuffleDeck();
+
+    this.broadcast("round_started");
 
     this.state.players.forEach((p) => {
       const player = p as BlackjackPlayer;
@@ -81,6 +115,7 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
 
     const card = this.state.deck.pop();
     if (card) {
+      // New cards from hits are always visible (not the first card)
       card.isHidden = false;
       player.hand.push(card);
 
@@ -190,6 +225,19 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     this.broadcast("game_over");
 
     this.clock.setTimeout(() => this.unlock(), 3000);
+
+    this.clearAutoStartTimer();
+
+    this.autoStartTimer = this.clock.setTimeout(() => {
+      console.log("Auto-starting new round...");
+      this.startRound();
+    }, this.AUTO_START_DELAY_MS);
+  }
+
+  clearAutoStartTimer() {
+    if (this.autoStartTimer) {
+      this.autoStartTimer.clear();
+    }
   }
 
   handleCardPlay(client: Client, cardIndex: number) {}
