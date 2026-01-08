@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   colyseusClient,
   consumeSeatReservation,
@@ -9,6 +9,7 @@ import { discordSDK } from "../utils/discord";
 import { authenticate } from "../utils/auth";
 import { GameState, type VoteGameMessage, BlackjackState } from "@deckards/common";
 import Blackjack from "./Blackjack";
+import { isDevelopment } from "../utils/envVars";
 
 type Joined = { id: string; name: string; clients: number; isLeader: boolean };
 
@@ -18,17 +19,26 @@ export function Game() {
 
   const [blackjackRoom, setBlackjackRoom] = useState<Room<BlackjackState> | null>(null);
 
+  const isJoiningRef = useRef(false);
+
   useEffect(() => {
-    if (joinedRoom) return;
+    if (joinedRoom || (isDevelopment && isJoiningRef.current)) return;
 
     const joinLobby = async () => {
       try {
+        if (isDevelopment) {
+          isJoiningRef.current = true;
+        }
+
         const data = await authenticate();
 
         colyseusClient.auth.token = data.token;
 
         if (!discordSDK.channelId) {
           console.error("No channelId available from Discord SDK");
+          if (isDevelopment) {
+            isJoiningRef.current = false;
+          }
           return;
         }
 
@@ -39,6 +49,9 @@ export function Game() {
 
         if (!room) {
           console.error("Failed to join or create lobby room");
+          if (isDevelopment) {
+            isJoiningRef.current = false;
+          }
           return;
         }
 
@@ -73,7 +86,6 @@ export function Game() {
           setJoinedInfo(null);
         });
 
-        // Handle seat reservation from server
         room.onMessage("seat_reservation", async (message: { reservation: any; game: string }) => {
           console.log("Received seat reservation for", message.game);
 
@@ -82,7 +94,6 @@ export function Game() {
               const gameRoom = await consumeSeatReservation(message.reservation);
               if (gameRoom) {
                 setBlackjackRoom(gameRoom);
-                // Optionally leave the lobby room
                 // await room.leave();
               }
             } catch (err) {
@@ -96,14 +107,26 @@ export function Game() {
         });
       } catch (err) {
         console.error("Authentication error:", err);
+        if (isDevelopment) {
+          isJoiningRef.current = false;
+        }
       }
     };
 
     // join using the channelId as the lobby id
     // delay slightly to avoid race with other mounts
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       joinLobby();
     }, 50);
+
+    // prevent duplicate joins
+    return () => {
+      clearTimeout(timeoutId);
+      // if component unmounts before joining completes, reset the flag
+      if (isDevelopment && !joinedRoom) {
+        isJoiningRef.current = false;
+      }
+    };
   }, [joinedRoom]);
 
   const handleStartGame = () => {
@@ -149,10 +172,21 @@ export function Game() {
               <div className="mb-3">Players: {joinedInfo.clients}</div>
 
               {joinedInfo.isLeader && (
-                <div className="flex gap-2">
-                  <button onClick={handleStartGame} className="px-3 py-1 bg-[#ef4444] rounded">
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={handleStartGame}
+                    className={`px-3 py-1 rounded ${
+                      joinedInfo.clients >= 2
+                        ? "bg-[#ef4444] hover:bg-[#dc2626] cursor-pointer"
+                        : "bg-gray-600 cursor-not-allowed opacity-50"
+                    }`}
+                    disabled={joinedInfo.clients < 2}
+                  >
                     Start Game
                   </button>
+                  {joinedInfo.clients < 2 && (
+                    <p className="text-xs text-gray-400">Need at least 2 players</p>
+                  )}
                 </div>
               )}
 

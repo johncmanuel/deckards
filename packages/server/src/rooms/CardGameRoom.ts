@@ -47,7 +47,9 @@ export abstract class CardGameRoom<TState extends GameState> extends Room<TState
           const card = this.state.deck.pop();
           if (card) {
             // TODO: use Schema Filters instead of below to hide this from opponents
-            card.isHidden = false;
+            // Hide first card from other players (like hole cards)
+            // First card (index 0) is hidden, subsequent cards are visible
+            card.isHidden = i === 0;
             player.hand.push(card);
           }
         }

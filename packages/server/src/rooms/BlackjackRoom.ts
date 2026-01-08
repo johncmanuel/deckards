@@ -1,6 +1,6 @@
 import { Client } from "colyseus";
 import { CardGameRoom } from "./CardGameRoom";
-import { BlackjackPlayer, BlackjackState, Player } from "@deckards/common";
+import { BlackjackPlayer, BlackjackState } from "@deckards/common";
 import { calculateHandScore } from "../utils/blackjack";
 
 export class BlackjackRoom extends CardGameRoom<BlackjackState> {
@@ -33,6 +33,12 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   }
 
   startRound() {
+    if (this.state.players.size < 2) {
+      console.warn("Cannot start blackjack with less than 2 players");
+      this.broadcast("error", { message: "Need at least 2 players to start" });
+      return;
+    }
+
     this.lock();
     this.shuffleDeck();
 
@@ -70,7 +76,7 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   handleHit(client: Client) {
     const player = this.state.players.get(client.sessionId) as BlackjackPlayer;
 
-    // Can only hit if not standing and not busted
+    // only hit if not standing and not busted
     if (!player || player.isStanding || player.isBusted) return;
 
     const card = this.state.deck.pop();
@@ -94,7 +100,7 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
 
     player.isStanding = true;
 
-    // After every stand, check if we need to proceed to Dealer turn
+    // after every stand, check if need to proceed to Dealer turn
     this.checkForRoundCompletion();
   }
 
@@ -110,7 +116,6 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   }
 
   checkForRoundCompletion() {
-    // Check if EVERY player is either Standing or Busted
     const allPlayersDone = Array.from(this.state.players.values()).every((p) => {
       const player = p as BlackjackPlayer;
       return player.isStanding || player.isBusted;
@@ -148,6 +153,17 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   }
 
   determineWinners() {
+    // reveal all players' first cards when game ends
+    this.state.players.forEach((p) => {
+      const player = p as BlackjackPlayer;
+      if (player.hand.length > 0) {
+        const firstCard = player.hand.at(0);
+        if (firstCard) {
+          firstCard.isHidden = false;
+        }
+      }
+    });
+
     const dealerScore = this.state.dealerScore;
     const dealerBust = dealerScore > 21;
 
@@ -155,7 +171,6 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       const player = p as BlackjackPlayer;
       if (player.isBusted) {
         // Player Busted -> Lose
-        // You might add a message: client.send("result", "LOSE");
         console.log(`${player.username} busted and loses.`);
       } else if (dealerBust) {
         // Dealer Busted -> Win
@@ -172,7 +187,6 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       }
     });
 
-    // Broadcast event to show "Round Over" screen
     this.broadcast("game_over");
 
     this.clock.setTimeout(() => this.unlock(), 3000);
