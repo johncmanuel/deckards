@@ -1,3 +1,4 @@
+import type { BlackjackState, GameState } from "@deckards/common";
 import { Client, Room } from "colyseus.js";
 
 function getEndpoint() {
@@ -8,12 +9,36 @@ function getEndpoint() {
 
 export const colyseusClient = new Client(getEndpoint());
 
-export async function joinOrCreateLobbyServer(options: any = {}): Promise<Room | null> {
+export async function joinOrCreateLobbyServer(options: any = {}): Promise<Room<GameState> | null> {
   try {
     const room = await colyseusClient.joinOrCreate("lobby", options);
     return room;
   } catch (err) {
     console.error("joinOrCreateLobbyServer error", err);
+    return null;
+  }
+}
+
+export async function joinOrCreateBlackjackRoom(
+  options: any = {},
+): Promise<Room<BlackjackState> | null> {
+  try {
+    const room = await colyseusClient.joinOrCreate("blackjack", options);
+    return room;
+  } catch (err) {
+    console.error("joinOrCreateBlackjackRoom error", err);
+    return null;
+  }
+}
+
+export async function consumeSeatReservation(
+  reservation: any,
+): Promise<Room<BlackjackState> | null> {
+  try {
+    const room = await colyseusClient.consumeSeatReservation<BlackjackState>(reservation);
+    return room;
+  } catch (err) {
+    console.error("consumeSeatReservation error", err);
     return null;
   }
 }

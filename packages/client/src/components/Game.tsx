@@ -1,0 +1,175 @@
+import { useState, useEffect } from "react";
+import {
+  colyseusClient,
+  consumeSeatReservation,
+  joinOrCreateLobbyServer,
+} from "../utils/colyseusClient";
+import { type Room } from "colyseus.js";
+import { discordSDK } from "../utils/discord";
+import { authenticate } from "../utils/auth";
+import { GameState, type VoteGameMessage, BlackjackState } from "@deckards/common";
+import Blackjack from "./Blackjack";
+
+type Joined = { id: string; name: string; clients: number; isLeader: boolean };
+
+export function Game() {
+  const [joinedRoom, setJoinedRoom] = useState<Room<GameState> | null>(null);
+  const [joinedInfo, setJoinedInfo] = useState<Joined | null>(null);
+
+  const [blackjackRoom, setBlackjackRoom] = useState<Room<BlackjackState> | null>(null);
+
+  useEffect(() => {
+    if (joinedRoom) return;
+
+    const joinLobby = async () => {
+      try {
+        const data = await authenticate();
+
+        colyseusClient.auth.token = data.token;
+
+        if (!discordSDK.channelId) {
+          console.error("No channelId available from Discord SDK");
+          return;
+        }
+
+        const room = await joinOrCreateLobbyServer({
+          username: data.user.username,
+          channelId: discordSDK.channelId,
+        });
+
+        if (!room) {
+          console.error("Failed to join or create lobby room");
+          return;
+        }
+
+        // players could be undefined at this time
+        const initialCount = room.state.players?.size ?? 1;
+        const isLeader = room.sessionId === room.state.lobbyLeader;
+
+        setJoinedRoom(room);
+        setJoinedInfo({
+          id: discordSDK.channelId,
+          name: data.user.username,
+          clients: initialCount || 1,
+          isLeader: isLeader,
+        });
+
+        room.onStateChange(() => {
+          const updatedIsLeader = room.sessionId === room.state.lobbyLeader;
+          setJoinedInfo((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  clients: room.state.players.size,
+                  isLeader: updatedIsLeader,
+                }
+              : prev,
+          );
+          setJoinedRoom((prev) => (prev ? room : prev));
+        });
+
+        room.onLeave(() => {
+          setJoinedRoom(null);
+          setJoinedInfo(null);
+        });
+
+        // Handle seat reservation from server
+        room.onMessage("seat_reservation", async (message: { reservation: any; game: string }) => {
+          console.log("Received seat reservation for", message.game);
+
+          if (message.game === "BLACKJACK") {
+            try {
+              const gameRoom = await consumeSeatReservation(message.reservation);
+              if (gameRoom) {
+                setBlackjackRoom(gameRoom);
+                // Optionally leave the lobby room
+                // await room.leave();
+              }
+            } catch (err) {
+              console.error("Failed to consume seat reservation", err);
+            }
+          }
+        });
+
+        room.onMessage("error", (message: { message: string }) => {
+          console.error("Server error:", message.message);
+        });
+      } catch (err) {
+        console.error("Authentication error:", err);
+      }
+    };
+
+    // join using the channelId as the lobby id
+    // delay slightly to avoid race with other mounts
+    setTimeout(() => {
+      joinLobby();
+    }, 50);
+  }, [joinedRoom]);
+
+  const handleStartGame = () => {
+    if (joinedRoom) {
+      // default to blackjack for now
+      // in future, show game selection UI below
+      const options: VoteGameMessage = { game: "BLACKJACK" };
+      joinedRoom.send("start_game", options);
+    }
+  };
+
+  return (
+    <>
+      {/* Lobby (shown only when not in a game) */}
+      {!blackjackRoom && (
+        <div className="max-w-2xl mx-auto p-6 bg-[#1f1f1f] rounded-lg shadow-md">
+          <h2 className="text-2xl font-semibold mb-4">Lobby</h2>
+          {joinedInfo && (
+            <div className="mt-2">
+              <div className="mb-2">
+                Joined lobby as: <strong>{joinedInfo.name}</strong>
+                {joinedInfo.isLeader && (
+                  <span className="ml-2 px-2 py-1 bg-yellow-600 text-xs rounded">Leader</span>
+                )}
+              </div>
+
+              <div className="mb-2 flex items-center gap-3">
+                <div className="text-sm text-gray-300">Lobby code:</div>
+                <div className="font-mono px-3 py-1 bg-[#0b0b0b] rounded">{joinedInfo.id}</div>
+                <button
+                  onClick={() => {
+                    if (navigator.clipboard && joinedInfo) {
+                      navigator.clipboard.writeText(joinedInfo.id).catch(() => {});
+                    }
+                    console.log("Copied lobby ID to clipboard");
+                  }}
+                  className="px-2 py-1 bg-[#2563eb] rounded text-sm"
+                >
+                  Copy
+                </button>
+              </div>
+
+              <div className="mb-3">Players: {joinedInfo.clients}</div>
+
+              {joinedInfo.isLeader && (
+                <div className="flex gap-2">
+                  <button onClick={handleStartGame} className="px-3 py-1 bg-[#ef4444] rounded">
+                    Start Game
+                  </button>
+                </div>
+              )}
+
+              {!joinedInfo.isLeader && (
+                <div className="text-sm text-gray-400">
+                  Waiting for lobby leader to start the game...
+                </div>
+              )}
+            </div>
+          )}
+          {!joinedInfo && <div className="mt-4 text-gray-400">Joining lobby...</div>}
+        </div>
+      )}
+
+      {blackjackRoom && <Blackjack room={blackjackRoom} />}
+    </>
+  );
+}
+
+export default Game;

@@ -1,6 +1,6 @@
 import { Client } from "colyseus";
 import { CardGameRoom } from "./CardGameRoom";
-import { BlackjackPlayer, BlackjackState } from "@deckards/common";
+import { BlackjackPlayer, BlackjackState, Player } from "@deckards/common";
 import { calculateHandScore } from "../utils/blackjack";
 
 export class BlackjackRoom extends CardGameRoom<BlackjackState> {
@@ -12,6 +12,24 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     this.onMessage("start_game", (client) => this.startRound());
     this.onMessage("hit", (client) => this.handleHit(client));
     this.onMessage("stand", (client) => this.handleStand(client));
+  }
+
+  onJoin(client: Client, options: any) {
+    console.log(options.username, "joined:", options.channelId, "in blackjack room");
+
+    // TODO: account for players joining w/ discord context
+    const newPlayer = new BlackjackPlayer(
+      client.sessionId,
+      options.username || "Guest",
+      options.avatarUrl || "",
+    );
+
+    this.state.players.set(client.sessionId, newPlayer);
+  }
+
+  onLeave(client: Client, consented: boolean) {
+    console.log(this.state.players.get(client.sessionId)?.username, "left!");
+    this.state.players.delete(client.sessionId);
   }
 
   startRound() {

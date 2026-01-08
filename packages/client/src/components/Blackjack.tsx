@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { extend, Application } from "@pixi/react";
 import { Container, Sprite, Texture, TextureSource, Assets, DEPRECATED_SCALE_MODES } from "pixi.js";
+import { Room } from "colyseus.js";
+import { BlackjackState } from "@deckards/common";
 
 extend({ Container, Sprite });
 
@@ -38,7 +40,7 @@ function getRandomCard(): Card {
   };
 }
 
-export function Blackjack() {
+export function Blackjack({ room }: { room?: Room<BlackjackState> }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
   const [dealerHand, setDealerHand] = useState<Card[]>([]);

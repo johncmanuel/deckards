@@ -13,6 +13,10 @@ export abstract class CardGameRoom<TState extends GameState> extends Room<TState
     });
   }
 
+  onDispose() {
+    console.log("room", this.roomId, "disposing...");
+  }
+
   generateDeck(): Card[] {
     const deck: Card[] = [];
     for (const suit of this.SUITS) {

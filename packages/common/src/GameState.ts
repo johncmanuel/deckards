@@ -56,4 +56,7 @@ export class GameState extends Schema {
 
   // stores the session ID of the player whose turn it is
   @type("string") currentTurn: string = "";
+
+  // stores the session ID of the lobby leader (first player to join)
+  @type("string") lobbyLeader: string = "";
 }
