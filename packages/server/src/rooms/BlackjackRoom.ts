@@ -29,7 +29,9 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     console.log(options.username, "joined:", options.channelId, "in blackjack room");
 
     if (this.state.players.size >= this.state.maxActivePlayers) {
-      console.warn(`${options.username} cannot join - max active players (${this.state.maxActivePlayers}) reached`);
+      console.warn(
+        `${options.username} cannot join - max active players (${this.state.maxActivePlayers}) reached`,
+      );
       client.send("error", { message: "Maximum number of active players reached." });
       client.leave();
       return;

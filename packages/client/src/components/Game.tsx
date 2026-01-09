@@ -97,7 +97,7 @@ export function Game() {
               const gameRoom = await consumeSeatReservation(message.reservation);
               if (gameRoom) {
                 setBlackjackRoom(gameRoom);
-                
+
                 gameRoom.onLeave(() => {
                   console.log("Left blackjack room, returning to lobby");
                   setBlackjackRoom(null);
@@ -177,30 +177,32 @@ export function Game() {
               <div className="mb-3">
                 <div className="text-sm text-gray-300 mb-2">Players: {joinedInfo.clients}</div>
                 <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                  {joinedRoom && joinedRoom.state.players && Array.from(joinedRoom.state.players.values()).map((player) => (
-                    <div
-                      key={player.id}
-                      className="flex items-center gap-3 bg-[#2a2a2a] px-3 py-2 rounded"
-                    >
-                      {player.avatarUrl ? (
-                        <img
-                          src={player.avatarUrl}
-                          alt={player.username}
-                          className="w-10 h-10 rounded-full"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-semibold">
-                          {player.username.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <p className="text-white font-medium">{player.username}</p>
-                        {player.id === joinedRoom.state.lobbyLeader && (
-                          <span className="text-xs text-yellow-400">Leader</span>
+                  {joinedRoom &&
+                    joinedRoom.state.players &&
+                    Array.from(joinedRoom.state.players.values()).map((player) => (
+                      <div
+                        key={player.id}
+                        className="flex items-center gap-3 bg-[#2a2a2a] px-3 py-2 rounded"
+                      >
+                        {player.avatarUrl ? (
+                          <img
+                            src={player.avatarUrl}
+                            alt={player.username}
+                            className="w-10 h-10 rounded-full"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-semibold">
+                            {player.username.charAt(0).toUpperCase()}
+                          </div>
                         )}
+                        <div className="flex-1">
+                          <p className="text-white font-medium">{player.username}</p>
+                          {player.id === joinedRoom.state.lobbyLeader && (
+                            <span className="text-xs text-yellow-400">Leader</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
 
@@ -239,13 +241,16 @@ export function Game() {
                   <button
                     onClick={handleStartGame}
                     className={`px-3 py-2 rounded ${
-                      (selectedGame === "BLACKJACK" && joinedInfo.clients >= 1) ||
+                      (selectedGame === "BLACKJACK" &&
+                        joinedInfo.clients >= 1 &&
+                        joinedInfo.clients <= 7) ||
                       (selectedGame === "BS" && joinedInfo.clients === 2)
                         ? "bg-[#ef4444] hover:bg-[#dc2626] cursor-pointer"
                         : "bg-gray-600 cursor-not-allowed opacity-50"
                     }`}
                     disabled={
-                      (selectedGame === "BLACKJACK" && joinedInfo.clients < 1) ||
+                      (selectedGame === "BLACKJACK" &&
+                        (joinedInfo.clients < 1 || joinedInfo.clients > 7)) ||
                       (selectedGame === "BS" && joinedInfo.clients !== 2)
                     }
                   >
@@ -254,6 +259,12 @@ export function Game() {
                   {selectedGame === "BS" && joinedInfo.clients !== 2 && (
                     <p className="text-xs text-gray-400">BS requires exactly 2 players</p>
                   )}
+                  {selectedGame === "BLACKJACK" &&
+                    (joinedInfo.clients < 1 || joinedInfo.clients > 7) && (
+                      <p className="text-xs text-gray-400">
+                        Blackjack requires between 1 and 7 players
+                      </p>
+                    )}
                 </div>
               )}
 

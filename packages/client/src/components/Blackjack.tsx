@@ -2,7 +2,13 @@ import { useState, useEffect } from "react";
 import { extend, Application } from "@pixi/react";
 import { Container, Sprite, Texture, TextureSource, Assets, DEPRECATED_SCALE_MODES } from "pixi.js";
 import { Room } from "colyseus.js";
-import { BlackjackState, type BlackjackPlayer, type Card as ServerCard, calculateHandScore } from "@deckards/common";
+import {
+  BlackjackState,
+  type BlackjackPlayer,
+  type Card as ServerCard,
+  calculateHandScore,
+} from "@deckards/common";
+import { isDevelopment } from "../utils/envVars";
 
 extend({ Container, Sprite });
 
@@ -51,7 +57,7 @@ function serverCardToClientCard(serverCard: ServerCard): Card {
 
 function calculateVisibleScore(hand: Card[]): number {
   // Filter out hidden cards and calculate score using shared utility
-  const visibleCards = hand.filter(card => !card.isHidden);
+  const visibleCards = hand.filter((card) => !card.isHidden);
   return calculateHandScore(visibleCards);
 }
 
@@ -86,6 +92,9 @@ export function Blackjack({
   const [isGameOver, setIsGameOver] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
   const [isLeader, setIsLeader] = useState(false);
+  const [debugPlayers, setDebugPlayers] = useState<
+    Array<{ username: string; hand: Card[]; score: number; displayScore: string }>
+  >([]);
 
   useEffect(() => {
     async function loadAssets() {
@@ -261,6 +270,10 @@ export function Blackjack({
     );
   }
 
+  const allOtherPlayers = isDevelopment ? [...otherPlayers, ...debugPlayers] : otherPlayers;
+  const leftPlayers = allOtherPlayers.slice(0, 3);
+  const rightPlayers = allOtherPlayers.slice(3);
+
   return (
     <div className="relative w-screen h-screen bg-[#101010] overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -270,12 +283,23 @@ export function Blackjack({
             <RenderHand hand={dealerHand} startX={window.innerWidth / 2 - cardWidth} startY={100} />
           )}
 
-          {otherPlayers.map((other, idx) => (
+          {/* split other players' hands on left and right hand side of screen  */}
+
+          {leftPlayers.map((other, idx) => (
             <RenderHand
               key={other.username}
               hand={other.hand}
               startX={50}
-              startY={200 + idx * 250}
+              startY={200 + idx * 270}
+            />
+          ))}
+
+          {rightPlayers.map((other, idx) => (
+            <RenderHand
+              key={other.username}
+              hand={other.hand}
+              startX={window.innerWidth - 200}
+              startY={200 + idx * 270}
             />
           ))}
 
@@ -291,13 +315,30 @@ export function Blackjack({
           <p className="text-yellow-200/80 text-sm">Score: {dealerDisplayScore}</p>
         </div>
 
-        {otherPlayers.length > 0 && (
-          <div className="absolute left-8">
-            {otherPlayers.map((other, idx) => (
-              <div 
-                key={other.username} 
+        {/* split other players' info on left and right hand side of screen on top of their hands */}
+
+        {leftPlayers.length > 0 && (
+          <div className="absolute">
+            {leftPlayers.map((other, idx) => (
+              <div
+                key={other.username}
                 className="bg-black/50 px-3 py-2 rounded absolute"
-                style={{ top: `${50 + idx * 280}px` }}
+                style={{ left: `30px`, top: `${50 + idx * 280}px` }}
+              >
+                <p className="text-blue-400 font-semibold text-sm">{other.username}</p>
+                <p className="text-blue-200/80 text-xs">Score: {other.displayScore}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {rightPlayers.length > 0 && (
+          <div className="absolute">
+            {rightPlayers.map((other, idx) => (
+              <div
+                key={other.username}
+                className="bg-black/50 px-3 py-2 rounded absolute"
+                style={{ left: `${window.innerWidth - 220}px`, top: `${50 + idx * 280}px` }}
               >
                 <p className="text-blue-400 font-semibold text-sm">{other.username}</p>
                 <p className="text-blue-200/80 text-xs">Score: {other.displayScore}</p>
