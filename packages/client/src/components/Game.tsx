@@ -19,6 +19,9 @@ export function Game() {
 
   const [blackjackRoom, setBlackjackRoom] = useState<Room<BlackjackState> | null>(null);
 
+  // TODO: reuse or create type for game selection in @deckards/common
+  const [selectedGame, setSelectedGame] = useState<"BLACKJACK" | "BS">("BLACKJACK");
+
   const isJoiningRef = useRef(false);
 
   useEffect(() => {
@@ -94,12 +97,10 @@ export function Game() {
               const gameRoom = await consumeSeatReservation(message.reservation);
               if (gameRoom) {
                 setBlackjackRoom(gameRoom);
-
-                // Listen for when the player leaves the blackjack room
+                
                 gameRoom.onLeave(() => {
                   console.log("Left blackjack room, returning to lobby");
                   setBlackjackRoom(null);
-                  // Keep the lobby room active - don't leave it
                 });
               }
             } catch (err) {
@@ -137,9 +138,7 @@ export function Game() {
 
   const handleStartGame = () => {
     if (joinedRoom) {
-      // default to blackjack for now
-      // in future, show game selection UI below
-      const options: VoteGameMessage = { game: "BLACKJACK" };
+      const options: VoteGameMessage = { game: selectedGame };
       joinedRoom.send("start_game", options);
     }
   };
@@ -207,19 +206,53 @@ export function Game() {
 
               {joinedInfo.isLeader && (
                 <div className="flex flex-col gap-2">
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-2">Select Game:</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setSelectedGame("BLACKJACK")}
+                        className={`px-4 py-3 rounded-lg border-2 transition-all ${
+                          selectedGame === "BLACKJACK"
+                            ? "border-blue-500 bg-blue-500/20 text-white"
+                            : "border-gray-600 bg-[#2a2a2a] text-gray-300 hover:border-gray-500"
+                        }`}
+                      >
+                        <div className="font-semibold">Blackjack</div>
+                        <div className="text-xs mt-1 opacity-75">Classic 21</div>
+                      </button>
+                      <button
+                        onClick={() => setSelectedGame("BS")}
+                        className={`px-4 py-3 rounded-lg border-2 transition-all ${
+                          selectedGame === "BS"
+                            ? "border-blue-500 bg-blue-500/20 text-white"
+                            : "border-gray-600 bg-[#2a2a2a] text-gray-300 hover:border-gray-500"
+                        }`}
+                      >
+                        <div className="font-semibold">BS</div>
+                        <div className="text-xs mt-1 opacity-75">Bluffing game</div>
+                      </button>
+                    </div>
+                  </div>
+                  {/* TODO: use @deckards/common to set these requirements on both client and server without
+                  repeating the logic
+                   */}
                   <button
                     onClick={handleStartGame}
-                    className={`px-3 py-1 rounded ${
-                      joinedInfo.clients >= 2
+                    className={`px-3 py-2 rounded ${
+                      (selectedGame === "BLACKJACK" && joinedInfo.clients >= 1) ||
+                      (selectedGame === "BS" && joinedInfo.clients === 2)
                         ? "bg-[#ef4444] hover:bg-[#dc2626] cursor-pointer"
                         : "bg-gray-600 cursor-not-allowed opacity-50"
                     }`}
-                    disabled={joinedInfo.clients < 2}
+                    disabled={
+                      (selectedGame === "BLACKJACK" && joinedInfo.clients < 1) ||
+                      (selectedGame === "BS" && joinedInfo.clients !== 2)
+                    }
                   >
                     Start Game
                   </button>
-                  {joinedInfo.clients < 2 && (
-                    <p className="text-xs text-gray-400">Need at least 2 players</p>
+                  {selectedGame === "BS" && joinedInfo.clients !== 2 && (
+                    <p className="text-xs text-gray-400">BS requires exactly 2 players</p>
                   )}
                 </div>
               )}

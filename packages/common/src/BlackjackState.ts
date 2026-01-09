@@ -12,4 +12,5 @@ export class BlackjackState extends GameState {
   @type("number") dealerScore: number = 0;
   @type([Card]) dealerHand = new ArraySchema<Card>();
   @type("string") gameLeader: string = "";
+  @type("number") maxActivePlayers: number = 7;
 }

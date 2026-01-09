@@ -28,6 +28,13 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   onJoin(client: Client, options: any) {
     console.log(options.username, "joined:", options.channelId, "in blackjack room");
 
+    if (this.state.players.size >= this.state.maxActivePlayers) {
+      console.warn(`${options.username} cannot join - max active players (${this.state.maxActivePlayers}) reached`);
+      client.send("error", { message: "Maximum number of active players reached." });
+      client.leave();
+      return;
+    }
+
     if (this.state.players.size === 0) {
       this.state.gameLeader = client.sessionId;
       console.log(`${options.username} is the game leader`);
@@ -64,12 +71,6 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
 
   startRound() {
     this.clearAutoStartTimer();
-
-    if (this.state.players.size < 2) {
-      console.warn("Cannot start blackjack with less than 2 players");
-      this.broadcast("error", { message: "Need at least 2 players to start" });
-      return;
-    }
 
     this.lock();
     this.shuffleDeck();
