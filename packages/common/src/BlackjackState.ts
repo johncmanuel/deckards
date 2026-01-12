@@ -14,3 +14,9 @@ export class BlackjackState extends GameState {
   @type("string") gameLeader: string = "";
   @type("number") maxActivePlayers: number = 7;
 }
+
+export interface GameOverResults {
+  winners: string[];
+  dealerScore: number;
+  dealerBust: boolean;
+}

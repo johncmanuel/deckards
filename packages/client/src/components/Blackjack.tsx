@@ -2,7 +2,12 @@ import { useState, useEffect } from "react";
 import { extend, Application } from "@pixi/react";
 import { Container, Sprite, Texture, TextureSource, Assets, DEPRECATED_SCALE_MODES } from "pixi.js";
 import { Room } from "colyseus.js";
-import { BlackjackState, type BlackjackPlayer, calculateHandScore } from "@deckards/common";
+import {
+  BlackjackState,
+  type BlackjackPlayer,
+  calculateHandScore,
+  type GameOverResults,
+} from "@deckards/common";
 import { CARD_BACK, getAllCardAssets, type Card, serverCardToClientCard } from "./ClientCard";
 
 extend({ Container, Sprite });
@@ -118,14 +123,11 @@ export function Blackjack({
 
     room.onStateChange(updateGameState);
 
-    room.onMessage(
-      "game_over",
-      (data: { winners: string[]; dealerScore: number; dealerBust: boolean }) => {
-        setIsGameOver(true);
-        setCanPlay(false);
-        setWinners(data.winners || []);
-      },
-    );
+    room.onMessage("game_over", (data: GameOverResults) => {
+      setIsGameOver(true);
+      setCanPlay(false);
+      setWinners(data.winners || []);
+    });
 
     room.onMessage("round_started", () => {
       setIsGameOver(false);

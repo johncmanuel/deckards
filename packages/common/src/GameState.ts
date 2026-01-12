@@ -36,7 +36,6 @@ export const ACTIVE_GAMES = {
 
 export const ACTIVITIES = {
   LOBBY: "LOBBY",
-  VOTING: "VOTING",
   PLAYING: "PLAYING",
 };
 

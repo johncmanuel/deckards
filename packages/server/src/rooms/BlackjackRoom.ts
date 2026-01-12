@@ -1,6 +1,6 @@
 import { Client } from "colyseus";
 import { CardGameRoom } from "./CardGameRoom";
-import { BlackjackPlayer, BlackjackState } from "@deckards/common";
+import { BlackjackPlayer, BlackjackState, type GameOverResults } from "@deckards/common";
 import { Delayed } from "colyseus";
 import { calculateHandScore } from "@deckards/common";
 
@@ -235,8 +235,12 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       }
     });
 
-    // TODO: add shared type in @deckards/common for this message
-    this.broadcast("game_over", { winners, dealerScore, dealerBust });
+    const gameOverRes: GameOverResults = {
+      winners,
+      dealerScore,
+      dealerBust,
+    };
+    this.broadcast("game_over", gameOverRes);
 
     this.clock.setTimeout(() => this.unlock(), 3000);
 

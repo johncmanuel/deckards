@@ -1,5 +1,5 @@
-import type { BlackjackState, GameState } from "@deckards/common";
-import { Client, Room } from "colyseus.js";
+import type { BlackjackState, GameState, LobbyOptions } from "@deckards/common";
+import { Client, Room, type SeatReservation } from "colyseus.js";
 
 function getEndpoint() {
   if (typeof window === "undefined") return "ws://localhost:2567";
@@ -11,7 +11,9 @@ export const colyseusClient = new Client(getEndpoint());
 
 // TODO: create shared typings for options in @deckards/common
 
-export async function joinOrCreateLobbyServer(options: any = {}): Promise<Room<GameState> | null> {
+export async function joinOrCreateLobbyServer(
+  options: LobbyOptions,
+): Promise<Room<GameState> | null> {
   try {
     const room = await colyseusClient.joinOrCreate("lobby", options);
     return room;
@@ -34,7 +36,7 @@ export async function joinOrCreateBlackjackRoom(
 }
 
 export async function consumeSeatReservation(
-  reservation: any,
+  reservation: SeatReservation,
 ): Promise<Room<BlackjackState> | null> {
   try {
     const room = await colyseusClient.consumeSeatReservation<BlackjackState>(reservation);

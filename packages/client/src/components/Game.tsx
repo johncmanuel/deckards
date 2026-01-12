@@ -7,7 +7,14 @@ import {
 import { type Room } from "colyseus.js";
 import { discordSDK } from "../utils/discord";
 import { authenticate } from "../utils/auth";
-import { GameState, type VoteGameMessage, BlackjackState } from "@deckards/common";
+import {
+  GameState,
+  type VoteGameMessage,
+  BlackjackState,
+  SelectedGame,
+  type LobbySeatReservationOptions,
+  type LobbyOptions,
+} from "@deckards/common";
 import Blackjack from "./Blackjack";
 import { isDevelopment } from "../utils/envVars";
 
@@ -19,9 +26,9 @@ export function Game() {
 
   const [blackjackRoom, setBlackjackRoom] = useState<Room<BlackjackState> | null>(null);
 
-  // TODO: reuse or create type for game selection in @deckards/common
-  const [selectedGame, setSelectedGame] = useState<"BLACKJACK" | "BS">("BLACKJACK");
+  const [selectedGame, setSelectedGame] = useState<SelectedGame>(SelectedGame.BLACKJACK);
 
+  // prevent duplicate join attempts to the server during development
   const isJoiningRef = useRef(false);
 
   useEffect(() => {
@@ -45,10 +52,12 @@ export function Game() {
           return;
         }
 
-        const room = await joinOrCreateLobbyServer({
+        const lobbyOpts: LobbyOptions = {
           username: data.user.username,
           channelId: discordSDK.channelId,
-        });
+        };
+
+        const room = await joinOrCreateLobbyServer(lobbyOpts);
 
         if (!room) {
           console.error("Failed to join or create lobby room");
@@ -89,10 +98,10 @@ export function Game() {
           setJoinedInfo(null);
         });
 
-        room.onMessage("seat_reservation", async (message: { reservation: any; game: string }) => {
+        room.onMessage("seat_reservation", async (message: LobbySeatReservationOptions) => {
           console.log("Received seat reservation for", message.game);
 
-          if (message.game === "BLACKJACK") {
+          if (message.game === SelectedGame.BLACKJACK) {
             try {
               const gameRoom = await consumeSeatReservation(message.reservation);
               if (gameRoom) {
@@ -212,9 +221,9 @@ export function Game() {
                     <label className="block text-sm text-gray-300 mb-2">Select Game:</label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
-                        onClick={() => setSelectedGame("BLACKJACK")}
+                        onClick={() => setSelectedGame(SelectedGame.BLACKJACK)}
                         className={`px-4 py-3 rounded-lg border-2 transition-all ${
-                          selectedGame === "BLACKJACK"
+                          selectedGame === SelectedGame.BLACKJACK
                             ? "border-blue-500 bg-blue-500/20 text-white"
                             : "border-gray-600 bg-[#2a2a2a] text-gray-300 hover:border-gray-500"
                         }`}
@@ -223,9 +232,9 @@ export function Game() {
                         <div className="text-xs mt-1 opacity-75">Classic 21</div>
                       </button>
                       <button
-                        onClick={() => setSelectedGame("BS")}
+                        onClick={() => setSelectedGame(SelectedGame.BS)}
                         className={`px-4 py-3 rounded-lg border-2 transition-all ${
-                          selectedGame === "BS"
+                          selectedGame === SelectedGame.BS
                             ? "border-blue-500 bg-blue-500/20 text-white"
                             : "border-gray-600 bg-[#2a2a2a] text-gray-300 hover:border-gray-500"
                         }`}
@@ -241,25 +250,25 @@ export function Game() {
                   <button
                     onClick={handleStartGame}
                     className={`px-3 py-2 rounded ${
-                      (selectedGame === "BLACKJACK" &&
+                      (selectedGame === SelectedGame.BLACKJACK &&
                         joinedInfo.clients >= 1 &&
                         joinedInfo.clients <= 7) ||
-                      (selectedGame === "BS" && joinedInfo.clients === 2)
+                      (selectedGame === SelectedGame.BS && joinedInfo.clients === 2)
                         ? "bg-[#ef4444] hover:bg-[#dc2626] cursor-pointer"
                         : "bg-gray-600 cursor-not-allowed opacity-50"
                     }`}
                     disabled={
-                      (selectedGame === "BLACKJACK" &&
+                      (selectedGame === SelectedGame.BLACKJACK &&
                         (joinedInfo.clients < 1 || joinedInfo.clients > 7)) ||
-                      (selectedGame === "BS" && joinedInfo.clients !== 2)
+                      (selectedGame === SelectedGame.BS && joinedInfo.clients !== 2)
                     }
                   >
                     Start Game
                   </button>
-                  {selectedGame === "BS" && joinedInfo.clients !== 2 && (
+                  {selectedGame === SelectedGame.BS && joinedInfo.clients !== 2 && (
                     <p className="text-xs text-gray-400">BS requires exactly 2 players</p>
                   )}
-                  {selectedGame === "BLACKJACK" &&
+                  {selectedGame === SelectedGame.BLACKJACK &&
                     (joinedInfo.clients < 1 || joinedInfo.clients > 7) && (
                       <p className="text-xs text-gray-400">
                         Blackjack requires between 1 and 7 players
