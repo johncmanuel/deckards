@@ -2,14 +2,14 @@ import config from "@colyseus/tools";
 import { monitor } from "@colyseus/monitor";
 import { playground } from "@colyseus/playground";
 import { JWT } from "@colyseus/auth";
+import { json } from "express";
+import type { DiscordTokenResponse, DiscordUser } from "@deckards/common";
 
 /**
  * Import your Room files
  */
 import { LobbyRoom } from "./rooms/LobbyRoom";
 import { BlackjackRoom } from "./rooms/BlackjackRoom";
-import { json } from "express";
-import type { DiscordTokenResponse, DiscordUser } from "@deckards/common";
 
 export default config({
   // options: {

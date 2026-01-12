@@ -176,11 +176,14 @@ export function Blackjack({
 
     room.onStateChange(updateGameState);
 
-    room.onMessage("game_over", (data: { winners: string[]; dealerScore: number; dealerBust: boolean }) => {
-      setIsGameOver(true);
-      setCanPlay(false);
-      setWinners(data.winners || []);
-    });
+    room.onMessage(
+      "game_over",
+      (data: { winners: string[]; dealerScore: number; dealerBust: boolean }) => {
+        setIsGameOver(true);
+        setCanPlay(false);
+        setWinners(data.winners || []);
+      },
+    );
 
     room.onMessage("round_started", () => {
       setIsGameOver(false);
@@ -331,9 +334,7 @@ export function Blackjack({
                 </>
               ) : (
                 <>
-                  <h2 className="text-gray-400 text-4xl font-bold drop-shadow-lg">
-                    Nobody won...
-                  </h2>
+                  <h2 className="text-gray-400 text-4xl font-bold drop-shadow-lg">Nobody won...</h2>
                   <p className="text-gray-500 text-lg mt-2">Better luck next round!</p>
                 </>
               )}
