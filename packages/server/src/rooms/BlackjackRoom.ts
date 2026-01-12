@@ -209,6 +209,7 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
 
     const dealerScore = this.state.dealerScore;
     const dealerBust = dealerScore > 21;
+    const winners: string[] = [];
 
     this.state.players.forEach((p) => {
       const player = p as BlackjackPlayer;
@@ -218,9 +219,11 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       } else if (dealerBust) {
         // Dealer Busted -> Win
         console.log(`${player.username} wins! Dealer busted.`);
+        winners.push(player.username);
       } else if (player.roundScore > dealerScore) {
         // Higher Score -> Win
         console.log(`${player.username} wins against dealer!`);
+        winners.push(player.username);
       } else if (player.roundScore === dealerScore) {
         // Push (Tie) -> No score change
         console.log(`${player.username} pushes with dealer.`);
@@ -230,7 +233,8 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       }
     });
 
-    this.broadcast("game_over");
+    // TODO: add shared type in @deckards/common for this message
+    this.broadcast("game_over", { winners, dealerScore, dealerBust });
 
     this.clock.setTimeout(() => this.unlock(), 3000);
 

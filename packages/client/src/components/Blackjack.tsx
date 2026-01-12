@@ -90,6 +90,7 @@ export function Blackjack({
   const [isGameOver, setIsGameOver] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
   const [isLeader, setIsLeader] = useState(false);
+  const [winners, setWinners] = useState<string[]>([]);
 
   useEffect(() => {
     async function loadAssets() {
@@ -175,13 +176,15 @@ export function Blackjack({
 
     room.onStateChange(updateGameState);
 
-    room.onMessage("game_over", () => {
+    room.onMessage("game_over", (data: { winners: string[]; dealerScore: number; dealerBust: boolean }) => {
       setIsGameOver(true);
       setCanPlay(false);
+      setWinners(data.winners || []);
     });
 
     room.onMessage("round_started", () => {
       setIsGameOver(false);
+      setWinners([]);
     });
 
     return () => {
@@ -299,7 +302,7 @@ export function Blackjack({
           ))}
 
           {playerHand.length > 0 && (
-            <RenderHand hand={playerHand} startX={window.innerWidth / 2 - cardWidth} startY={610} />
+            <RenderHand hand={playerHand} startX={window.innerWidth / 2 - cardWidth} startY={650} />
           )}
         </Application>
       </div>
@@ -309,6 +312,34 @@ export function Blackjack({
           <h2 className="text-yellow-400 text-3xl font-bold drop-shadow-md">Dealer</h2>
           <p className="text-yellow-200/80 text-sm">Score: {dealerDisplayScore}</p>
         </div>
+
+        {isGameOver && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-black/80 border-4 border-yellow-400 rounded-lg px-12 py-8 text-center max-h-[80vh] flex flex-col mb-40">
+              {winners.length > 0 ? (
+                <>
+                  <h2 className="text-yellow-400 text-4xl font-bold mb-4 drop-shadow-lg">
+                    WINNERS!
+                  </h2>
+                  <div className="text-white text-2xl space-y-2 overflow-y-auto max-h-[60vh] pointer-events-auto pr-4">
+                    {winners.map((winner, idx) => (
+                      <div key={idx} className="font-semibold">
+                        {winner}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-gray-400 text-4xl font-bold drop-shadow-lg">
+                    Nobody won...
+                  </h2>
+                  <p className="text-gray-500 text-lg mt-2">Better luck next round!</p>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* split other players' info on left and right hand side of screen on top of their hands */}
 
