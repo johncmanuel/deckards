@@ -37,9 +37,14 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       return;
     }
 
-    if (this.state.players.size === 0) {
+    if (options.isLeader) {
       this.state.gameLeader = client.sessionId;
-      console.log(`${options.username} is the game leader`);
+      console.log(`${options.username} is the game leader (set from lobby)`);
+    }
+    // set leader based on join order if leader not already set
+    else if (this.state.players.size === 0 && !this.state.gameLeader) {
+      this.state.gameLeader = client.sessionId;
+      console.log(`${options.username} is the game leader (first to join)`);
     }
 
     const newPlayer = new BlackjackPlayer(

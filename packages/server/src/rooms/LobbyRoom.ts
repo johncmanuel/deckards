@@ -38,6 +38,7 @@ export class LobbyRoom extends Room<GameState> {
           const reservation = await matchMaker.joinOrCreate("blackjack", {
             username: player.username,
             channelId: channelId,
+            isLeader: sessionId === this.state.lobbyLeader,
           });
 
           reservations.set(sessionId, reservation);

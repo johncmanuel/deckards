@@ -8,7 +8,6 @@ import {
   type Card as ServerCard,
   calculateHandScore,
 } from "@deckards/common";
-import { isDevelopment } from "../utils/envVars";
 
 extend({ Container, Sprite });
 
@@ -86,15 +85,11 @@ export function Blackjack({
     Array<{ username: string; hand: Card[]; score: number; displayScore: string }>
   >([]);
   const [playerScore, setPlayerScore] = useState(0);
-  const [dealerScore, setDealerScore] = useState(0);
   const [dealerDisplayScore, setDealerDisplayScore] = useState<string>("?");
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
   const [isLeader, setIsLeader] = useState(false);
-  const [debugPlayers, setDebugPlayers] = useState<
-    Array<{ username: string; hand: Card[]; score: number; displayScore: string }>
-  >([]);
 
   useEffect(() => {
     async function loadAssets() {
@@ -127,6 +122,7 @@ export function Blackjack({
     loadAssets();
   }, []);
 
+  // TODO: review and refactor overall game state logic
   useEffect(() => {
     if (!room) return;
 
@@ -168,7 +164,7 @@ export function Blackjack({
 
       const dealerCards = Array.from(room.state.dealerHand).map(serverCardToClientCard);
       setDealerHand(dealerCards);
-      setDealerScore(room.state.dealerScore);
+      // setDealerScore(room.state.dealerScore);
       setDealerDisplayScore(formatObfuscatedScore(dealerCards, room.state.dealerScore));
 
       // game starts if there are cards
@@ -270,9 +266,8 @@ export function Blackjack({
     );
   }
 
-  const allOtherPlayers = isDevelopment ? [...otherPlayers, ...debugPlayers] : otherPlayers;
-  const leftPlayers = allOtherPlayers.slice(0, 3);
-  const rightPlayers = allOtherPlayers.slice(3);
+  const leftPlayers = otherPlayers.slice(0, 3);
+  const rightPlayers = otherPlayers.slice(3);
 
   return (
     <div className="relative w-screen h-screen bg-[#101010] overflow-hidden">
