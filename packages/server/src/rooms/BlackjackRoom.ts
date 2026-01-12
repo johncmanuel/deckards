@@ -60,6 +60,8 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     console.log(this.state.players.get(client.sessionId)?.username, "left!");
     this.state.players.delete(client.sessionId);
 
+    // TODO: explore case where player leader leaves back to lobby and a round in the game ends;
+    // who would start the next round?
     // if game leader leaves, assign a new leader
     if (client.sessionId === this.state.gameLeader) {
       const remainingPlayers = Array.from(this.state.players.keys());
