@@ -10,5 +10,3 @@ export interface DiscordTokenResponse {
   token: string; // Colyseus JWT
   user: DiscordUser;
 }
-
-export {};

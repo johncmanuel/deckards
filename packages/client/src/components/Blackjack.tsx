@@ -2,60 +2,15 @@ import { useState, useEffect } from "react";
 import { extend, Application } from "@pixi/react";
 import { Container, Sprite, Texture, TextureSource, Assets, DEPRECATED_SCALE_MODES } from "pixi.js";
 import { Room } from "colyseus.js";
-import {
-  BlackjackState,
-  type BlackjackPlayer,
-  type Card as ServerCard,
-  calculateHandScore,
-} from "@deckards/common";
+import { BlackjackState, type BlackjackPlayer, calculateHandScore } from "@deckards/common";
+import { CARD_BACK, getAllCardAssets, type Card, serverCardToClientCard } from "./ClientCard";
 
 extend({ Container, Sprite });
 
 // some of the variables and types will be placed in @deckards/common later;
 // this is currently for prototyping purposes
 
-type Card = {
-  suit: string;
-  rank: string;
-  asset: string;
-  isHidden: boolean;
-};
-
-const CARD_BACK = "/cards/card_back.png";
-
-const SUIT_MAP: Record<string, string> = {
-  H: "hearts",
-  D: "diamonds",
-  C: "clubs",
-  S: "spades",
-};
-
-function cardAsset(suit: string, rank: string) {
-  let r = rank;
-
-  // Add leading zero for single digit numbers
-  if (parseInt(rank) < 10 && !isNaN(parseInt(rank))) {
-    r = `0${rank}`;
-  }
-
-  // Convert server suit format to asset name
-  const suitName = SUIT_MAP[suit] || suit.toLowerCase();
-
-  // example result: /cards/card_spades_02.png
-  return `/cards/card_${suitName}_${r}.png`;
-}
-
-function serverCardToClientCard(serverCard: ServerCard): Card {
-  return {
-    suit: serverCard.suit,
-    rank: serverCard.rank,
-    asset: cardAsset(serverCard.suit, serverCard.rank),
-    isHidden: serverCard.isHidden,
-  };
-}
-
 function calculateVisibleScore(hand: Card[]): number {
-  // Filter out hidden cards and calculate score using shared utility
   const visibleCards = hand.filter((card) => !card.isHidden);
   return calculateHandScore(visibleCards);
 }
@@ -98,20 +53,8 @@ export function Blackjack({
         // Set pixel art scaling mode globally before loading
         TextureSource.defaultOptions.scaleMode = DEPRECATED_SCALE_MODES.NEAREST;
 
-        // TODO: rework some of the logic here
-        const allCardAssets = [CARD_BACK];
-        const suits = ["spades", "hearts", "clubs", "diamonds"];
-        const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
-
-        suits.forEach((suit) => {
-          ranks.forEach((rank) => {
-            let r = rank;
-            if (parseInt(rank) < 10 && !isNaN(parseInt(rank))) {
-              r = `0${rank}`;
-            }
-            allCardAssets.push(`/cards/card_${suit}_${r}.png`);
-          });
-        });
+        const allCardAssets = getAllCardAssets();
+        allCardAssets.push(CARD_BACK);
 
         await Assets.load(allCardAssets);
         setIsLoaded(true);
@@ -165,7 +108,6 @@ export function Blackjack({
 
       const dealerCards = Array.from(room.state.dealerHand).map(serverCardToClientCard);
       setDealerHand(dealerCards);
-      // setDealerScore(room.state.dealerScore);
       setDealerDisplayScore(formatObfuscatedScore(dealerCards, room.state.dealerScore));
 
       // game starts if there are cards

@@ -10,6 +10,7 @@ export function calculateHandScore(hand: Card[] | any): number {
     if (["J", "Q", "K"].includes(card.rank)) {
       score += 10;
     } else if (card.rank === "A") {
+      // adjust ace values to get best score for player
       aces += 1;
       score += 11;
     } else {
