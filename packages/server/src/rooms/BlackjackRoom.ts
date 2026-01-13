@@ -96,7 +96,7 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     this.clearAutoStartTimer();
 
     this.lock();
-    this.shuffleDeck();
+    this.shuffleDeck(6);
 
     this.broadcast("round_started");
 

@@ -21,18 +21,20 @@ export abstract class CardGameRoom<TState extends GameState> extends Room<TState
     console.log("room", this.roomId, "disposing...");
   }
 
-  generateDeck(): Card[] {
+  generateDeck(numDecks: number = 1): Card[] {
     const deck: Card[] = [];
-    for (const suit of this.SUITS) {
-      for (const rank of this.RANKS) {
-        deck.push(new Card(suit, rank));
+    for (let deckNum = 0; deckNum < numDecks; deckNum++) {
+      for (const suit of this.SUITS) {
+        for (const rank of this.RANKS) {
+          deck.push(new Card(suit, rank));
+        }
       }
     }
     return deck;
   }
 
-  shuffleDeck() {
-    const tempDeck = this.generateDeck();
+  shuffleDeck(numDecks: number = 1) {
+    const tempDeck = this.generateDeck(numDecks);
 
     // Fisher-Yates Shuffle
     for (let i = tempDeck.length - 1; i > 0; i--) {

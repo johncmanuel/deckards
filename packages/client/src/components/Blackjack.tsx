@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { extend, Application } from "@pixi/react";
 import { Container, Sprite, Texture, TextureSource, Assets, DEPRECATED_SCALE_MODES } from "pixi.js";
-import { Room, getStateCallbacks } from "colyseus.js";
+import { Room } from "colyseus.js";
 import {
   BlackjackState,
   type BlackjackPlayer,
@@ -9,7 +9,6 @@ import {
   type GameOverResults,
 } from "@deckards/common";
 import { CARD_BACK, getAllCardAssets, type Card, serverCardToClientCard } from "./ClientCard";
-import { isDevelopment } from "../utils/envVars";
 
 extend({ Container, Sprite });
 
@@ -100,14 +99,16 @@ export function Blackjack({
       }
 
       // update other players
-      // TODO: this could be exploited by other clients to see hidden cards
-      // need to implement Schema Filters on server and modify the below logic to
-      // adapt to these filters
       const others: OtherPlayer[] = [];
       room.state.players.forEach((p, sessionId) => {
         if (sessionId !== room.sessionId) {
           const player = p as BlackjackPlayer;
-          const hand = Array.from(player.hand ?? []).map(serverCardToClientCard);
+          const hand = Array.from(player.hand ?? [])
+            .filter((serverCard) => serverCard.suit !== "" && serverCard.rank !== "")
+            .map((serverCard) => {
+              const card = serverCardToClientCard(serverCard);
+              return { ...card, isHidden: false };
+            });
           others.push({
             username: player.username,
             hand: hand,
