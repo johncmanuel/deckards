@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { extend, Application } from "@pixi/react";
 import { Container, Sprite, Texture, TextureSource, Assets, DEPRECATED_SCALE_MODES } from "pixi.js";
-import { Room } from "colyseus.js";
+import { Room, getStateCallbacks } from "colyseus.js";
 import {
   BlackjackState,
   type BlackjackPlayer,
@@ -9,11 +9,19 @@ import {
   type GameOverResults,
 } from "@deckards/common";
 import { CARD_BACK, getAllCardAssets, type Card, serverCardToClientCard } from "./ClientCard";
+import { isDevelopment } from "../utils/envVars";
 
 extend({ Container, Sprite });
 
 // some of the variables and types will be placed in @deckards/common later;
 // this is currently for prototyping purposes
+
+interface OtherPlayer {
+  username: string;
+  hand: Card[];
+  score: number;
+  displayScore: string;
+}
 
 function calculateVisibleScore(hand: Card[]): number {
   const visibleCards = hand.filter((card) => !card.isHidden);
@@ -41,9 +49,7 @@ export function Blackjack({
   const [isLoaded, setIsLoaded] = useState(false);
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
   const [dealerHand, setDealerHand] = useState<Card[]>([]);
-  const [otherPlayers, setOtherPlayers] = useState<
-    Array<{ username: string; hand: Card[]; score: number; displayScore: string }>
-  >([]);
+  const [otherPlayers, setOtherPlayers] = useState<OtherPlayer[]>([]);
   const [playerScore, setPlayerScore] = useState(0);
   const [dealerDisplayScore, setDealerDisplayScore] = useState<string>("?");
   const [isGameStarted, setIsGameStarted] = useState(false);
@@ -71,9 +77,11 @@ export function Blackjack({
     loadAssets();
   }, []);
 
-  // TODO: review and refactor overall game state logic
   useEffect(() => {
     if (!room) return;
+
+    // TODO: review and refactor overall game state logic
+    // const $ = getStateCallbacks(room);
 
     const updateGameState = () => {
       const currentPlayer = room.state.players.get(room.sessionId) as BlackjackPlayer | undefined;
@@ -81,7 +89,7 @@ export function Blackjack({
       setIsLeader(room.sessionId === room.state.gameLeader);
 
       if (currentPlayer) {
-        const playerCards = Array.from(currentPlayer.hand).map((serverCard) => {
+        const playerCards = Array.from(currentPlayer.hand ?? []).map((serverCard) => {
           const card = serverCardToClientCard(serverCard);
           return { ...card, isHidden: false }; // always show own cards
         });
@@ -95,12 +103,11 @@ export function Blackjack({
       // TODO: this could be exploited by other clients to see hidden cards
       // need to implement Schema Filters on server and modify the below logic to
       // adapt to these filters
-      const others: Array<{ username: string; hand: Card[]; score: number; displayScore: string }> =
-        [];
+      const others: OtherPlayer[] = [];
       room.state.players.forEach((p, sessionId) => {
         if (sessionId !== room.sessionId) {
           const player = p as BlackjackPlayer;
-          const hand = Array.from(player.hand).map(serverCardToClientCard);
+          const hand = Array.from(player.hand ?? []).map(serverCardToClientCard);
           others.push({
             username: player.username,
             hand: hand,
@@ -111,12 +118,12 @@ export function Blackjack({
       });
       setOtherPlayers(others);
 
-      const dealerCards = Array.from(room.state.dealerHand).map(serverCardToClientCard);
+      const dealerCards = Array.from(room.state.dealerHand ?? []).map(serverCardToClientCard);
       setDealerHand(dealerCards);
       setDealerDisplayScore(formatObfuscatedScore(dealerCards, room.state.dealerScore));
 
       // game starts if there are cards
-      setIsGameStarted(dealerCards.length > 0 || (currentPlayer?.hand.length ?? 0) > 0);
+      setIsGameStarted(dealerCards.length > 0 || (currentPlayer?.hand?.length ?? 0) > 0);
     };
 
     updateGameState();

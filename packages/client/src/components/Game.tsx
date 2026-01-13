@@ -4,7 +4,7 @@ import {
   consumeSeatReservation,
   joinOrCreateLobbyServer,
 } from "../utils/colyseusClient";
-import { type Room } from "colyseus.js";
+import { getStateCallbacks, type Room } from "colyseus.js";
 import { discordSDK } from "../utils/discord";
 import { authenticate } from "../utils/auth";
 import {
@@ -14,6 +14,7 @@ import {
   SelectedGame,
   type LobbySeatReservationOptions,
   type LobbyOptions,
+  type ServerMultiplayerError,
 } from "@deckards/common";
 import Blackjack from "./Blackjack";
 import { isDevelopment } from "../utils/envVars";
@@ -79,6 +80,9 @@ export function Game() {
           isLeader: isLeader,
         });
 
+        // TODO: manage state updates more cleanly
+        // const $ = getStateCallbacks(room);
+
         room.onStateChange(() => {
           const updatedIsLeader = room.sessionId === room.state.lobbyLeader;
           setJoinedInfo((prev) =>
@@ -118,8 +122,8 @@ export function Game() {
           }
         });
 
-        room.onMessage("error", (message: { message: string }) => {
-          console.error("Server error:", message.message);
+        room.onMessage("error", (m: ServerMultiplayerError) => {
+          console.error("Server error:", m.message);
         });
       } catch (err) {
         console.error("Authentication error:", err);

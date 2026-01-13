@@ -10,7 +10,7 @@ export class BlackjackPlayer extends Player {
 export class BlackjackState extends GameState {
   // @type({ map: BlackjackPlayer }) players = new MapSchema<BlackjackPlayer>();
   @type("number") dealerScore: number = 0;
-  @type([Card]) dealerHand = new ArraySchema<Card>();
+  /*@view()*/ @type([Card]) dealerHand = new ArraySchema<Card>();
   @type("string") gameLeader: string = "";
   @type("number") maxActivePlayers: number = 7;
 }

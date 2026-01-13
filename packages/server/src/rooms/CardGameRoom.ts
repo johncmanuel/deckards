@@ -13,6 +13,10 @@ export abstract class CardGameRoom<TState extends GameState> extends Room<TState
     });
   }
 
+  onJoin(client: Client, options: any) {
+    // will explicitly define it here (as empty) as a reminder that card rooms can override this
+  }
+
   onDispose() {
     console.log("room", this.roomId, "disposing...");
   }
@@ -40,17 +44,28 @@ export abstract class CardGameRoom<TState extends GameState> extends Room<TState
     tempDeck.forEach((card) => this.state.deck.push(card));
   }
 
+  // deals specified amount of cards to each player from the room wide deck
+  // (everyone shares the same standard deck, though this could be modified per game)
+  // TODO: modify this to deal differently per game type; so far it's
+  // only meant for blackjack
   dealCards(amount: number) {
-    this.state.players.forEach((player) => {
+    this.state.players.forEach((p) => {
       for (let i = 0; i < amount; i++) {
         if (this.state.deck.length > 0) {
           const card = this.state.deck.pop();
           if (card) {
-            // TODO: use Schema Filters instead of below to hide this from opponents
-            // Hide first card from other players (like hole cards)
-            // First card (index 0) is hidden, subsequent cards are visible
-            card.isHidden = i === 0;
-            player.hand.push(card);
+            // Mark first card as hidden (hole card)
+            // card.isHidden = i === 0;
+
+            // add card to each client's view
+            // this.clients.forEach((c) => {
+            //   if (c.view.has(card)) return;
+            //   c.view.add(card);
+            // });
+
+            card.ownerId = p.id;
+
+            p.hand.push(card);
           }
         }
       }

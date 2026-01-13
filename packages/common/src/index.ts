@@ -3,3 +3,7 @@ export * from "./discordTypes";
 export * from "./BlackjackState";
 export * from "./blackjackUtils";
 export * from "./lobby";
+
+export interface ServerMultiplayerError {
+  message: string;
+}

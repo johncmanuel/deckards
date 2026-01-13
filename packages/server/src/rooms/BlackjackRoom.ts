@@ -1,12 +1,20 @@
 import { Client } from "colyseus";
 import { CardGameRoom } from "./CardGameRoom";
-import { BlackjackPlayer, BlackjackState, type GameOverResults } from "@deckards/common";
+import {
+  BlackjackPlayer,
+  BlackjackState,
+  ServerMultiplayerError,
+  type GameOverResults,
+} from "@deckards/common";
 import { Delayed } from "colyseus";
 import { calculateHandScore } from "@deckards/common";
+// import { StateView } from "@colyseus/schema";
 
 export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   private autoStartTimer?: Delayed;
   private readonly AUTO_START_DELAY_MS = 10000;
+
+  // TODO: create types for the options below
 
   onCreate(options: any) {
     this.state = new BlackjackState();
@@ -16,7 +24,10 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     this.onMessage("start_game", (client) => {
       if (client.sessionId !== this.state.gameLeader) {
         console.warn(`Non-leader ${client.sessionId} attempted to start round`);
-        client.send("error", { message: "Only the game leader can start a new round." });
+        const msg: ServerMultiplayerError = {
+          message: "Only the game leader can start a new round.",
+        };
+        client.send("error", msg);
         return;
       }
       this.startRound();
@@ -32,7 +43,8 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       console.warn(
         `${options.username} cannot join - max active players (${this.state.maxActivePlayers}) reached`,
       );
-      client.send("error", { message: "Maximum number of active players reached." });
+      const msg: ServerMultiplayerError = { message: "Maximum number of active players reached." };
+      client.send("error", msg);
       client.leave();
       return;
     }
@@ -54,6 +66,8 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     );
 
     this.state.players.set(client.sessionId, newPlayer);
+
+    // client.view = new StateView(true);
   }
 
   onLeave(client: Client, consented: boolean) {
@@ -94,6 +108,10 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       player.roundScore = 0;
     });
 
+    // this.clients.forEach((c) => {
+    //   c.view.clear();
+    // });
+
     this.state.dealerHand.clear();
     this.state.dealerScore = 0;
 
@@ -107,6 +125,10 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       if (upCard) {
         upCard.isHidden = false;
         this.state.dealerHand.push(upCard);
+        // this.clients.forEach((c) => {
+        //   if (c.view.has(upCard)) return;
+        //   c.view.add(upCard);
+        // });
       }
       if (holeCard) {
         holeCard.isHidden = true;
@@ -125,9 +147,14 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
 
     const card = this.state.deck.pop();
     if (card) {
-      // New cards from hits are always visible (not the first card)
       card.isHidden = false;
+      card.ownerId = player.id;
       player.hand.push(card);
+
+      // this.clients.forEach((c) => {
+      //   if (c.view.has(card)) return;
+      //   c.view.add(card);
+      // });
 
       this.updateScores();
 
@@ -156,7 +183,6 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     });
 
     // Calculate dealer score based ONLY on visible cards?
-    // Usually in state we store the *real* score, but frontend only shows visible.
     this.state.dealerScore = calculateHandScore(this.state.dealerHand);
   }
 
@@ -186,6 +212,11 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       const card = this.state.deck.pop();
       if (card) {
         card.isHidden = false;
+        card.ownerId = "";
+        // this.clients.forEach((c) => {
+        //   if (c.view.has(card)) return;
+        //   c.view.add(card);
+        // });
         this.state.dealerHand.push(card);
         this.updateScores();
       }

@@ -9,8 +9,6 @@ function getEndpoint() {
 
 export const colyseusClient = new Client(getEndpoint());
 
-// TODO: create shared typings for options in @deckards/common
-
 export async function joinOrCreateLobbyServer(
   options: LobbyOptions,
 ): Promise<Room<GameState> | null> {
@@ -19,18 +17,6 @@ export async function joinOrCreateLobbyServer(
     return room;
   } catch (err) {
     console.error("joinOrCreateLobbyServer error", err);
-    return null;
-  }
-}
-
-export async function joinOrCreateBlackjackRoom(
-  options: any = {},
-): Promise<Room<BlackjackState> | null> {
-  try {
-    const room = await colyseusClient.joinOrCreate("blackjack", options);
-    return room;
-  } catch (err) {
-    console.error("joinOrCreateBlackjackRoom error", err);
     return null;
   }
 }

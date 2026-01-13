@@ -1,14 +1,16 @@
-import { Schema, MapSchema, type, ArraySchema } from "@colyseus/schema";
+import { Schema, MapSchema, type, ArraySchema, view } from "@colyseus/schema";
 
 export class Card extends Schema {
   @type("string") suit: string; // "H", "D", "C", "S"
   @type("string") rank: string; // "2", "3", ... "K", "A"
   @type("boolean") isHidden: boolean = true; // if true, player only sees card back
+  @type("string") ownerId: string; // sessionId of owning player; leave blank or whatever if in non-player deck
 
-  constructor(suit: string, rank: string) {
+  constructor(suit: string, rank: string, ownerId: string = "") {
     super();
     this.suit = suit;
     this.rank = rank;
+    this.ownerId = ownerId;
   }
 }
 
@@ -18,7 +20,7 @@ export class Player extends Schema {
   @type("string") avatarUrl: string;
   @type("boolean") isReady: boolean = false;
 
-  @type([Card]) hand = new ArraySchema<Card>();
+  /*@view()*/ @type([Card]) hand = new ArraySchema<Card>();
 
   constructor(id: string, username: string, avatarUrl: string) {
     super();
