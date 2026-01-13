@@ -4,7 +4,7 @@ import {
   consumeSeatReservation,
   joinOrCreateLobbyServer,
 } from "../utils/colyseusClient";
-import { getStateCallbacks, type Room } from "colyseus.js";
+import { type Room } from "colyseus.js";
 import { discordSDK } from "../utils/discord";
 import { authenticate } from "../utils/auth";
 import {
