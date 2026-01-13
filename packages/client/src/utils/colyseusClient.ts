@@ -1,13 +1,12 @@
 import type { BlackjackState, GameState, LobbyOptions } from "@deckards/common";
 import { Client, Room, type SeatReservation } from "colyseus.js";
 
-function getEndpoint() {
-  if (typeof window === "undefined") return "ws://localhost:2567";
-  const proto = window.location.protocol === "https:" ? "wss" : "ws";
-  return `${proto}://${window.location.hostname}:2567`;
-}
-
-export const colyseusClient = new Client(getEndpoint());
+// Ensure colyseus is using the correct path when embedded in Discord
+// Source:
+// https://github.com/colyseus/discord-activity/issues/1#issuecomment-2709077431
+const queryParams = new URLSearchParams(window.location.search);
+const isEmbedded = queryParams.get('frame_id') != null;
+export const colyseusClient = new Client(isEmbedded ? '/.proxy/colyseus' : '/colyseus');
 
 export async function joinOrCreateLobbyServer(
   options: LobbyOptions,
@@ -16,8 +15,7 @@ export async function joinOrCreateLobbyServer(
     const room = await colyseusClient.joinOrCreate("lobby", options);
     return room;
   } catch (err) {
-    console.error("joinOrCreateLobbyServer error", err);
-    return null;
+    return null; 
   }
 }
 
@@ -28,7 +26,6 @@ export async function consumeSeatReservation(
     const room = await colyseusClient.consumeSeatReservation<BlackjackState>(reservation);
     return room;
   } catch (err) {
-    console.error("consumeSeatReservation error", err);
     return null;
   }
 }

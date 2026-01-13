@@ -28,6 +28,8 @@ export function Game() {
   const [blackjackRoom, setBlackjackRoom] = useState<Room<BlackjackState> | null>(null);
 
   const [selectedGame, setSelectedGame] = useState<SelectedGame>(SelectedGame.BLACKJACK);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [progressMessage, setProgressMessage] = useState<string | null>(null);
 
   // prevent duplicate join attempts to the server during development
   const isJoiningRef = useRef(false);
@@ -41,16 +43,17 @@ export function Game() {
           isJoiningRef.current = true;
         }
 
+        setProgressMessage("Authenticating with Discord...");
         const data = await authenticate();
 
         colyseusClient.auth.token = data.token;
 
         if (!discordSDK.channelId) {
-          console.error("No channelId available from Discord SDK");
+          const errorMsg = "No channelId available from Discord SDK";
           if (isDevelopment) {
             isJoiningRef.current = false;
           }
-          return;
+          throw new Error(errorMsg);
         }
 
         const lobbyOpts: LobbyOptions = {
@@ -58,14 +61,19 @@ export function Game() {
           channelId: discordSDK.channelId,
         };
 
-        const room = await joinOrCreateLobbyServer(lobbyOpts);
+        setProgressMessage(
+          "Connecting to lobby server... options:" + `${JSON.stringify(lobbyOpts)}`,
+        );
+
+        const room = await joinOrCreateLobbyServer(lobbyOpts)
 
         if (!room) {
-          console.error("Failed to join or create lobby room");
+          const errorMsg = "Failed to join or create lobby room - received null response";
+          console.error(errorMsg);
           if (isDevelopment) {
             isJoiningRef.current = false;
           }
-          return;
+          throw new Error(errorMsg);
         }
 
         // players could be undefined at this time
@@ -79,6 +87,7 @@ export function Game() {
           clients: initialCount || 1,
           isLeader: isLeader,
         });
+        setProgressMessage(null);
 
         // TODO: manage state updates more cleanly
         // const $ = getStateCallbacks(room);
@@ -117,16 +126,23 @@ export function Game() {
                 });
               }
             } catch (err) {
-              console.error("Failed to consume seat reservation", err);
+              const errorMsg = `Failed to consume seat reservation: ${err instanceof Error ? err.message : String(err)}`;
+              console.error(errorMsg);
+              setErrorMessage(errorMsg);
             }
           }
         });
 
         room.onMessage("error", (m: ServerMultiplayerError) => {
-          console.error("Server error:", m.message);
+          const errorMsg = `Server error: ${m.message}`;
+          console.error(errorMsg);
+          setErrorMessage(errorMsg);
         });
       } catch (err) {
-        console.error("Authentication error:", err);
+        const errorMsg = `Caught error: ${err instanceof Error ? err.message : String(err)}`;
+        console.error(errorMsg);
+        setErrorMessage(errorMsg);
+        setProgressMessage(null);
         if (isDevelopment) {
           isJoiningRef.current = false;
         }
@@ -151,6 +167,7 @@ export function Game() {
 
   const handleStartGame = () => {
     if (joinedRoom) {
+      // TODO: may need to send the token to the server? ATM, starting a game room requires auth
       const options: VoteGameMessage = { game: selectedGame };
       joinedRoom.send("start_game", options);
     }
@@ -158,7 +175,35 @@ export function Game() {
 
   return (
     <>
-      {/* Lobby (shown only when not in a game) */}
+      {errorMessage && (
+        <div className="max-w-2xl mx-auto mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg shadow-md">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-red-200 mb-1">Error</h3>
+              <p className="text-red-100">{errorMessage}</p>
+            </div>
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="px-3 py-1 bg-red-700 hover:bg-red-600 rounded text-sm font-medium transition-colors"
+              aria-label="Dismiss error"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {progressMessage && (
+        <div className="max-w-2xl mx-auto mb-4 p-4 bg-blue-900/50 border border-blue-500 rounded-lg shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="animate-spin h-5 w-5 border-2 border-blue-300 border-t-transparent rounded-full"></div>
+            <div className="flex-1">
+              <p className="text-blue-100 font-medium">{progressMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!blackjackRoom && (
         <div className="max-w-2xl mx-auto p-6 bg-[#1f1f1f] rounded-lg shadow-md">
           <h2 className="text-2xl font-semibold mb-4">Lobby</h2>

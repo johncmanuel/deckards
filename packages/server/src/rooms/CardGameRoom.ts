@@ -1,9 +1,14 @@
 import { Room, Client } from "colyseus";
 import { GameState, Card } from "@deckards/common";
+import { JWT } from "@colyseus/auth";
 
 export abstract class CardGameRoom<TState extends GameState> extends Room<TState> {
   protected SUITS = ["H", "D", "C", "S"];
   protected RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+
+  static onAuth(token: string) {
+    return JWT.verify(token);
+  }
 
   onCreate(options: any) {
     // setting state is done by child classes!

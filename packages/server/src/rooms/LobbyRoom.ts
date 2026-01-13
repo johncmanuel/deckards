@@ -1,13 +1,19 @@
-import { Room, Client, matchMaker } from "@colyseus/core";
+import { JWT } from "@colyseus/auth";
+import { Room, Client, matchMaker, AuthContext } from "@colyseus/core";
 import {
   Player,
   GameState,
   ACTIVE_GAMES,
   ACTIVITIES,
   type VoteGameMessage,
+  LobbyOptions,
 } from "@deckards/common";
 
 export class LobbyRoom extends Room<GameState> {
+  static onAuth(token: string) {
+    return JWT.verify(token);
+  }
+
   onCreate(options: any) {
     this.state = new GameState();
 
@@ -35,15 +41,18 @@ export class LobbyRoom extends Room<GameState> {
         const channelId = this.metadata?.channelId || options.channelId;
 
         for (const [sessionId, player] of this.state.players.entries()) {
+          const targetClient = Array.from(this.clients).find((c) => c.sessionId === sessionId);
+          const clientAuth = targetClient?.auth;
+
+          // TODO: modify based on selected game
           const reservation = await matchMaker.joinOrCreate("blackjack", {
             username: player.username,
             channelId: channelId,
             isLeader: sessionId === this.state.lobbyLeader,
-          });
+          }, );
 
           reservations.set(sessionId, reservation);
 
-          const targetClient = Array.from(this.clients).find((c) => c.sessionId === sessionId);
           if (targetClient) {
             targetClient.send("seat_reservation", {
               reservation: reservation,
@@ -60,8 +69,10 @@ export class LobbyRoom extends Room<GameState> {
   }
 
   // TODO: account for players joining w/ discord context
-  onJoin(client: Client, options: any) {
-    console.log(options.username, "joined:", options.channelId);
+  // auth contains the data returned from the onAuth method
+  // https://docs.colyseus.io/auth/room#server-onauth-method
+  onJoin(client: Client, options: LobbyOptions, auth: AuthContext) {
+    console.log(options.username, "joined:", options.channelId, "auth", auth);
 
     if (this.state.players.size === 0) {
       this.state.lobbyLeader = client.sessionId;
@@ -76,6 +87,7 @@ export class LobbyRoom extends Room<GameState> {
     const newPlayer = new Player(
       client.sessionId,
       options.username || "Guest",
+      // @ts-ignore
       options.avatarUrl || "",
     );
 

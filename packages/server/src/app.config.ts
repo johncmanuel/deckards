@@ -53,6 +53,8 @@ export default config({
         return;
       }
 
+      console.log("attempting to get discord token");
+
       try {
         const response = await fetch(`https://discord.com/api/oauth2/token`, {
           method: "POST",
@@ -89,7 +91,7 @@ export default config({
           user,
         };
 
-        res.send(payload);
+        res.status(200).send(payload);
       } catch (e: any) {
         res.status(400).send({ error: e.message });
       }
