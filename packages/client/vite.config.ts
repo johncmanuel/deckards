@@ -5,4 +5,9 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+
+  // https://github.com/colyseus/discord-activity/blob/main/apps/client/vite.config.js
+  server: {
+    allowedHosts: ["localhost", ".trycloudflare.com", ".ngrok-free.app"],
+  },
 });
