@@ -250,7 +250,7 @@ export function Game() {
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-semibold">
-                            {player.username.charAt(0).toUpperCase()}
+                            {player.username.charAt(0).toUpperCase() || "P"} {/* P for player */}
                           </div>
                         )}
                         <div className="flex-1">
