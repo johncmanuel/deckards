@@ -67,7 +67,10 @@ export function Blackjack({
   });
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
 
-  const isMobile = windowSize.width < 768;
+  // after some eyeballing on the dev tools using different screen sizes, 
+  // i've decided to go with this value
+  const MOBILE_WIDTH_THRESHOLD_PX = 908;
+  const isMobile = windowSize.width < MOBILE_WIDTH_THRESHOLD_PX;
 
   // track window size for a more responsive layout
   useEffect(() => {
@@ -218,6 +221,8 @@ export function Blackjack({
     }
   };
 
+  // UI isn't perfect yet, but this will do for now, lol 
+
   // constants for computing UI layout
 
   const NUM_PLAYERS_PER_SIDE = 3; // other players displayed on client's left and right sides
@@ -258,23 +263,31 @@ export function Blackjack({
     hand,
     startX,
     startY,
+    setStackDirectionToRight = true,
   }: {
     hand: Card[];
     startX: number;
     startY: number;
+    setStackDirectionToRight?: boolean;
   }) => {
     return (
       <pixiContainer x={startX} y={startY}>
-        {hand.map((c, i) => (
-          <pixiSprite
-            key={`${c.suit}-${c.rank}-${i}`}
-            texture={getTexture(c.isHidden ? CARD_BACK : c.asset)}
-            x={i * 30} // overlap cards slightly
-            y={0}
-            width={cardWidth}
-            height={cardHeight}
-          />
-        ))}
+        {hand.map((c, i) => {
+          const xOffset = setStackDirectionToRight ? i * 30 : (hand.length - 1 - i) * 30;
+          return (
+            <pixiSprite
+              key={`${c.suit}-${c.rank}-${i}`}
+              texture={getTexture(c.isHidden ? CARD_BACK : c.asset)}
+              x={xOffset}
+              y={0}
+              width={cardWidth}
+              height={cardHeight}
+              // TODO: make cards after first card more readable (can only see rank visually by its bottom right corner)
+              // anchor={setStackDirectionToRight ? undefined : 0.5}
+              // scale={setStackDirectionToRight ? undefined : {x: 1, y: -1}}
+            />
+          );
+        })}
       </pixiContainer>
     );
   };
@@ -319,6 +332,7 @@ export function Blackjack({
                 hand={other.hand}
                 startX={windowSize.width - cardWidth - 100}
                 startY={sidePlayerStartY + idx * sidePlayerSpacing}
+                setStackDirectionToRight={false}
               />
             ))}
 
@@ -440,7 +454,7 @@ export function Blackjack({
                     className="text-white hover:text-yellow-400 text-2xl transition-colors"
                     aria-label="Close panel"
                   >
-                    ×
+                    x
                   </button>
                 </div>
 
