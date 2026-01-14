@@ -22,6 +22,11 @@ interface OtherPlayer {
   displayScore: string;
 }
 
+interface WindowDimensions {
+  width: number;
+  height: number;
+}
+
 function calculateVisibleScore(hand: Card[]): number {
   const visibleCards = hand.filter((card) => !card.isHidden);
   return calculateHandScore(visibleCards);
@@ -56,6 +61,23 @@ export function Blackjack({
   const [canPlay, setCanPlay] = useState(false);
   const [isLeader, setIsLeader] = useState(false);
   const [winners, setWinners] = useState<string[]>([]);
+  const [windowSize, setWindowSize] = useState<WindowDimensions>({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
+
+  const isMobile = windowSize.width < 768;
+
+  // track window size for a more responsive layout
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     async function loadAssets() {
@@ -196,8 +218,41 @@ export function Blackjack({
     }
   };
 
-  const cardWidth = 96;
-  const cardHeight = 144;
+  // constants for computing UI layout
+
+  const NUM_PLAYERS_PER_SIDE = 3; // other players displayed on client's left and right sides
+
+  const MAX_CARD_HEIGHT_PX = 120;
+  const CARD_ASPECT_RATIO = 2 / 3;
+  const CARD_HEIGHT_SCALE = 0.18; // percentage of viewport height
+
+  const DEALER_VERTICAL_POS = 0.15; // percentage from top screen (NOTE: dealer is always positioned at the top of screen)
+  const PLAYER_MAX_VERTICAL_POS = 0.55; // max percentage from the bottom of the screen
+  const SIDE_PLAYERS_START_POS = 0.2; // percentage from top
+
+  const PLAYER_BOTTOM_BUFFER_PX = 220; // spacing between player text and bottom button controls
+  const SIDE_PLAYER_MAX_SPACING_PX = 270; // max spacing between each side player
+  const SIDE_PLAYER_BOTTOM_BUFFER_PX = 100; // bottom margin for side players
+
+  // compute UI layout values
+
+  const cardHeight = Math.min(MAX_CARD_HEIGHT_PX, windowSize.height * CARD_HEIGHT_SCALE);
+  const cardWidth = cardHeight * CARD_ASPECT_RATIO;
+
+  const dealerY = windowSize.height * DEALER_VERTICAL_POS;
+  const playerY = Math.max(
+    windowSize.height - cardHeight - PLAYER_BOTTOM_BUFFER_PX,
+    windowSize.height * PLAYER_MAX_VERTICAL_POS,
+  );
+
+  const sidePlayerStartY = windowSize.height * SIDE_PLAYERS_START_POS;
+  const sidePlayerSpacing = Math.min(
+    SIDE_PLAYER_MAX_SPACING_PX,
+    (windowSize.height - sidePlayerStartY - SIDE_PLAYER_BOTTOM_BUFFER_PX) / NUM_PLAYERS_PER_SIDE, // there are 3 players per side
+  );
+
+  const leftPlayers = otherPlayers.slice(0, NUM_PLAYERS_PER_SIDE);
+  const rightPlayers = otherPlayers.slice(NUM_PLAYERS_PER_SIDE);
 
   const RenderHand = ({
     hand,
@@ -232,40 +287,47 @@ export function Blackjack({
     );
   }
 
-  const leftPlayers = otherPlayers.slice(0, 3);
-  const rightPlayers = otherPlayers.slice(3);
-
   return (
     <div className="relative w-screen h-screen bg-[#101010] overflow-hidden">
       <div className="absolute inset-0 z-0">
         {/* show the hands */}
         <Application resizeTo={window} backgroundAlpha={0} resolution={1}>
           {dealerHand.length > 0 && (
-            <RenderHand hand={dealerHand} startX={window.innerWidth / 2 - cardWidth} startY={100} />
+            <RenderHand
+              hand={dealerHand}
+              startX={windowSize.width / 2 - cardWidth}
+              startY={dealerY}
+            />
           )}
 
-          {/* split other players' hands on left and right hand side of screen  */}
+          {/* split other players' hands on left and right hand side of screen (desktop only) */}
 
-          {leftPlayers.map((other, idx) => (
-            <RenderHand
-              key={other.username}
-              hand={other.hand}
-              startX={50}
-              startY={200 + idx * 270}
-            />
-          ))}
+          {!isMobile &&
+            leftPlayers.map((other, idx) => (
+              <RenderHand
+                key={other.username}
+                hand={other.hand}
+                startX={50}
+                startY={sidePlayerStartY + idx * sidePlayerSpacing}
+              />
+            ))}
 
-          {rightPlayers.map((other, idx) => (
-            <RenderHand
-              key={other.username}
-              hand={other.hand}
-              startX={window.innerWidth - 200}
-              startY={200 + idx * 270}
-            />
-          ))}
+          {!isMobile &&
+            rightPlayers.map((other, idx) => (
+              <RenderHand
+                key={other.username}
+                hand={other.hand}
+                startX={windowSize.width - cardWidth - 100}
+                startY={sidePlayerStartY + idx * sidePlayerSpacing}
+              />
+            ))}
 
           {playerHand.length > 0 && (
-            <RenderHand hand={playerHand} startX={window.innerWidth / 2 - cardWidth} startY={650} />
+            <RenderHand
+              hand={playerHand}
+              startX={windowSize.width / 2 - cardWidth}
+              startY={playerY}
+            />
           )}
         </Application>
       </div>
@@ -302,15 +364,18 @@ export function Blackjack({
           </div>
         )}
 
-        {/* split other players' info on left and right hand side of screen on top of their hands */}
+        {/* split other players' info on left and right hand side of screen on top of their hands (desktop only) */}
 
-        {leftPlayers.length > 0 && (
+        {!isMobile && leftPlayers.length > 0 && (
           <div className="absolute">
             {leftPlayers.map((other, idx) => (
               <div
                 key={other.username}
                 className="bg-black/50 px-3 py-2 rounded absolute"
-                style={{ left: `30px`, top: `${50 + idx * 280}px` }}
+                style={{
+                  left: `30px`,
+                  top: `${sidePlayerStartY - 110 + idx * sidePlayerSpacing}px`,
+                }}
               >
                 <p className="text-blue-400 font-semibold text-sm">{other.username}</p>
                 <p className="text-blue-200/80 text-xs">Score: {other.displayScore}</p>
@@ -319,13 +384,16 @@ export function Blackjack({
           </div>
         )}
 
-        {rightPlayers.length > 0 && (
+        {!isMobile && rightPlayers.length > 0 && (
           <div className="absolute">
             {rightPlayers.map((other, idx) => (
               <div
                 key={other.username}
                 className="bg-black/50 px-3 py-2 rounded absolute"
-                style={{ left: `${window.innerWidth - 220}px`, top: `${50 + idx * 280}px` }}
+                style={{
+                  left: `${windowSize.width - 220}px`,
+                  top: `${sidePlayerStartY - 110 + idx * sidePlayerSpacing}px`,
+                }}
               >
                 <p className="text-blue-400 font-semibold text-sm">{other.username}</p>
                 <p className="text-blue-200/80 text-xs">Score: {other.displayScore}</p>
@@ -334,10 +402,81 @@ export function Blackjack({
           </div>
         )}
 
+        {isMobile && otherPlayers.length > 0 && (
+          <button
+            className="absolute top-4 right-4 z-20 bg-black/70 hover:bg-black/90 p-3 rounded-lg pointer-events-auto transition-colors"
+            onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
+            aria-label="Toggle players panel"
+          >
+            {/* like my amazing hamburger icon? */}
+            <div className="flex flex-col gap-1.5 w-6">
+              <div className="h-0.5 bg-white rounded"></div>
+              <div className="h-0.5 bg-white rounded"></div>
+              <div className="h-0.5 bg-white rounded"></div>
+            </div>
+          </button>
+        )}
+
+        {/* mobile friendly way of showing other players' cards via side panel */}
+        {isMobile && (
+          <>
+            {isSidePanelOpen && (
+              <div
+                className="absolute inset-0 bg-black/50 z-30 pointer-events-auto"
+                onClick={() => setIsSidePanelOpen(false)}
+              />
+            )}
+
+            <div
+              className={`absolute top-0 right-0 h-full w-72 bg-[#1a1a1a] border-l-2 border-yellow-400/30 z-40 transition-transform duration-300 ease-in-out pointer-events-auto overflow-y-auto ${
+                isSidePanelOpen ? "translate-x-0" : "translate-x-full"
+              }`}
+            >
+              <div className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-yellow-400 text-lg font-bold">Other Players</h3>
+                  <button
+                    onClick={() => setIsSidePanelOpen(false)}
+                    className="text-white hover:text-yellow-400 text-2xl transition-colors"
+                    aria-label="Close panel"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {otherPlayers.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No other players</p>
+                ) : (
+                  <div className="space-y-4">
+                    {otherPlayers.map((other) => (
+                      <div
+                        key={other.username}
+                        className="bg-black/50 p-3 rounded-lg border border-blue-400/30"
+                      >
+                        <p className="text-blue-400 font-semibold mb-1">{other.username}</p>
+                        <p className="text-blue-200/80 text-sm mb-2">Score: {other.displayScore}</p>
+                        <div className="flex gap-1 flex-wrap">
+                          {other.hand.map((card, idx) => (
+                            <div
+                              key={`${card.suit}-${card.rank}-${idx}`}
+                              className="text-xs bg-white/10 px-2 py-1 rounded"
+                            >
+                              {card.isHidden ? "?" : `${card.rank}`}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
         <div className="flex flex-col items-center gap-6">
           <div className="text-center">
-            <h2 className="text-green-400 text-3xl font-bold drop-shadow-md">Player</h2>
-            <p className="text-green-200/80 text-sm">Score: {playerScore || "?"}</p>
+            <p className="text-green-200/80 text-2xl">Score: {playerScore || "?"}</p>
           </div>
 
           <div className="flex gap-4 pointer-events-auto pb-10">
