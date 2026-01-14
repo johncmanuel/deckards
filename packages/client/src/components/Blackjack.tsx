@@ -83,6 +83,12 @@ export function Blackjack({
     // const $ = getStateCallbacks(room);
 
     const updateGameState = () => {
+      // ensure state is initialized
+      if (!room.state || !room.state.players) {
+        console.log("Room state not yet initialized");
+        return;
+      }
+
       const currentPlayer = room.state.players.get(room.sessionId) as BlackjackPlayer | undefined;
 
       setIsLeader(room.sessionId === room.state.gameLeader);
@@ -100,23 +106,25 @@ export function Blackjack({
 
       // update other players
       const others: OtherPlayer[] = [];
-      room.state.players.forEach((p, sessionId) => {
-        if (sessionId !== room.sessionId) {
-          const player = p as BlackjackPlayer;
-          const hand = Array.from(player.hand ?? [])
-            .filter((serverCard) => serverCard.suit !== "" && serverCard.rank !== "")
-            .map((serverCard) => {
-              const card = serverCardToClientCard(serverCard);
-              return { ...card, isHidden: false };
+      if (room.state.players) {
+        room.state.players.forEach((p, sessionId) => {
+          if (sessionId !== room.sessionId) {
+            const player = p as BlackjackPlayer;
+            const hand = Array.from(player.hand ?? [])
+              .filter((serverCard) => serverCard.suit !== "" && serverCard.rank !== "")
+              .map((serverCard) => {
+                const card = serverCardToClientCard(serverCard);
+                return { ...card, isHidden: false };
+              });
+            others.push({
+              username: player.username,
+              hand: hand,
+              score: player.roundScore,
+              displayScore: formatObfuscatedScore(hand, player.roundScore),
             });
-          others.push({
-            username: player.username,
-            hand: hand,
-            score: player.roundScore,
-            displayScore: formatObfuscatedScore(hand, player.roundScore),
-          });
-        }
-      });
+          }
+        });
+      }
       setOtherPlayers(others);
 
       const dealerCards = Array.from(room.state.dealerHand ?? []).map(serverCardToClientCard);

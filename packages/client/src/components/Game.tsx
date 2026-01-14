@@ -65,7 +65,7 @@ export function Game() {
           "Connecting to lobby server... options:" + `${JSON.stringify(lobbyOpts)}`,
         );
 
-        const room = await joinOrCreateLobbyServer(lobbyOpts)
+        const room = await joinOrCreateLobbyServer(lobbyOpts);
 
         if (!room) {
           const errorMsg = "Failed to join or create lobby room - received null response";

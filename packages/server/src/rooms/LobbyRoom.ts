@@ -10,12 +10,15 @@ import {
 } from "@deckards/common";
 
 export class LobbyRoom extends Room<GameState> {
+  private playersAuth: Map<string, AuthContext>;
+
   static onAuth(token: string) {
     return JWT.verify(token);
   }
 
   onCreate(options: any) {
     this.state = new GameState();
+    this.playersAuth = new Map<string, AuthContext>();
 
     this.onMessage("start_game", async (client, message: VoteGameMessage) => {
       if (client.sessionId !== this.state.lobbyLeader) {
@@ -42,14 +45,15 @@ export class LobbyRoom extends Room<GameState> {
 
         for (const [sessionId, player] of this.state.players.entries()) {
           const targetClient = Array.from(this.clients).find((c) => c.sessionId === sessionId);
-          const clientAuth = targetClient?.auth;
+          const auth = this.playersAuth.get(sessionId);
 
           // TODO: modify based on selected game
           const reservation = await matchMaker.joinOrCreate("blackjack", {
+            auth,
             username: player.username,
             channelId: channelId,
             isLeader: sessionId === this.state.lobbyLeader,
-          }, );
+          });
 
           reservations.set(sessionId, reservation);
 
@@ -71,6 +75,7 @@ export class LobbyRoom extends Room<GameState> {
   // TODO: account for players joining w/ discord context
   // auth contains the data returned from the onAuth method
   // https://docs.colyseus.io/auth/room#server-onauth-method
+
   onJoin(client: Client, options: LobbyOptions, auth: AuthContext) {
     console.log(options.username, "joined:", options.channelId, "auth", auth);
 
@@ -92,6 +97,7 @@ export class LobbyRoom extends Room<GameState> {
     );
 
     this.state.players.set(client.sessionId, newPlayer);
+    this.playersAuth.set(client.sessionId, auth);
   }
 
   onLeave(client: Client, consented: boolean) {

@@ -5,8 +5,8 @@ import { Client, Room, type SeatReservation } from "colyseus.js";
 // Source:
 // https://github.com/colyseus/discord-activity/issues/1#issuecomment-2709077431
 const queryParams = new URLSearchParams(window.location.search);
-const isEmbedded = queryParams.get('frame_id') != null;
-export const colyseusClient = new Client(isEmbedded ? '/.proxy/colyseus' : '/colyseus');
+const isEmbedded = queryParams.get("frame_id") != null;
+export const colyseusClient = new Client(isEmbedded ? "/.proxy/colyseus" : "/colyseus");
 
 export async function joinOrCreateLobbyServer(
   options: LobbyOptions,
@@ -15,7 +15,7 @@ export async function joinOrCreateLobbyServer(
     const room = await colyseusClient.joinOrCreate("lobby", options);
     return room;
   } catch (err) {
-    return null; 
+    return null;
   }
 }
 

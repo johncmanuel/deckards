@@ -1,13 +1,16 @@
-import { Room, Client } from "colyseus";
+import { Room, Client, AuthContext } from "colyseus";
 import { GameState, Card } from "@deckards/common";
-import { JWT } from "@colyseus/auth";
 
 export abstract class CardGameRoom<TState extends GameState> extends Room<TState> {
   protected SUITS = ["H", "D", "C", "S"];
   protected RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 
-  static onAuth(token: string) {
-    return JWT.verify(token);
+  async onAuth(client: Client, options: any, authContext: AuthContext) {
+    if (!options.auth) {
+      throw new Error("Missing forwarded auth");
+    }
+
+    return options.auth;
   }
 
   onCreate(options: any) {
