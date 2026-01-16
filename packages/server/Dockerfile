@@ -1,3 +1,8 @@
+# might be some issues with bun monorepos and docker, see below:
+# https://github.com/oven-sh/bun/issues/7969
+# https://github.com/oven-sh/bun/issues/8033
+# keeping these references here for troubleshooting in the future
+
 # intended to run from the root dir
 FROM oven/bun:alpine 
 
