@@ -11,7 +11,7 @@ on:
 env:
   REGISTRY: ghcr.io
   PACKAGE_NAME: deckards-server
-  IMAGE_NAME: ${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}
+  IMAGE_NAME: ${{ github.repository_owner }}/deckards-server
 
 jobs:
   build-and-deploy:
