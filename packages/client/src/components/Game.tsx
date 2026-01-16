@@ -174,165 +174,178 @@ export function Game() {
 
   return (
     <>
-      {errorMessage && (
-        <div className="max-w-2xl mx-auto mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg shadow-md">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-red-200 mb-1">Error</h3>
-              <p className="text-red-100">{errorMessage}</p>
-            </div>
-            <button
-              onClick={() => setErrorMessage(null)}
-              className="px-3 py-1 bg-red-700 hover:bg-red-600 rounded text-sm font-medium transition-colors"
-              aria-label="Dismiss error"
-            >
-              Dismiss
-            </button>
-          </div>
-        </div>
-      )}
-
-      {progressMessage && (
-        <div className="max-w-2xl mx-auto mb-4 p-4 bg-blue-900/50 border border-blue-500 rounded-lg shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="animate-spin h-5 w-5 border-2 border-blue-300 border-t-transparent rounded-full"></div>
-            <div className="flex-1">
-              <p className="text-blue-100 font-medium">{progressMessage}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {!blackjackRoom && (
-        <div className="max-w-2xl mx-auto p-6 bg-[#1f1f1f] rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold mb-4">Lobby</h2>
-          {joinedInfo && (
-            <div className="mt-2">
-              <div className="mb-2">
-                Joined lobby as: <strong>{joinedInfo.name}</strong>
-                {joinedInfo.isLeader && (
-                  <span className="ml-2 px-2 py-1 bg-yellow-600 text-xs rounded">Leader</span>
-                )}
-              </div>
-
-              <div className="mb-2 flex items-center gap-3">
-                <div className="text-sm text-gray-300">Lobby code:</div>
-                <div className="font-mono px-3 py-1 bg-[#0b0b0b] rounded">{joinedInfo.id}</div>
-                <button
-                  onClick={() => {
-                    if (navigator.clipboard && joinedInfo) {
-                      navigator.clipboard.writeText(joinedInfo.id).catch(() => {});
-                    }
-                    console.log("Copied lobby ID to clipboard");
-                  }}
-                  className="px-2 py-1 bg-[#2563eb] rounded text-sm"
-                >
-                  Copy
-                </button>
-              </div>
-
-              <div className="mb-3">
-                <div className="text-sm text-gray-300 mb-2">Players: {joinedInfo.clients}</div>
-                <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                  {joinedRoom &&
-                    joinedRoom.state.players &&
-                    Array.from(joinedRoom.state.players.values()).map((player) => (
-                      <div
-                        key={player.id}
-                        className="flex items-center gap-3 bg-[#2a2a2a] px-3 py-2 rounded"
-                      >
-                        {player.avatarUrl ? (
-                          <img
-                            src={player.avatarUrl}
-                            alt={player.username}
-                            className="w-10 h-10 rounded-full"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-semibold">
-                            {player.username.charAt(0).toUpperCase() || "P"} {/* P for player */}
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{player.username}</p>
-                          {player.id === joinedRoom.state.lobbyLeader && (
-                            <span className="text-xs text-yellow-400">Leader</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+        <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-3xl">
+            {errorMessage && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-300 rounded-lg shadow-sm">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-red-800 mb-1">Error</h3>
+                    <p className="text-red-700 text-sm sm:text-base break-words">{errorMessage}</p>
+                  </div>
+                  <button
+                    onClick={() => setErrorMessage(null)}
+                    className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium transition-colors shrink-0"
+                    aria-label="Dismiss error"
+                  >
+                    Dismiss
+                  </button>
                 </div>
               </div>
+            )}
 
-              {joinedInfo.isLeader && (
-                <div className="flex flex-col gap-2">
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-2">Select Game:</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => setSelectedGame(SelectedGame.BLACKJACK)}
-                        className={`px-4 py-3 rounded-lg border-2 transition-all ${
-                          selectedGame === SelectedGame.BLACKJACK
-                            ? "border-blue-500 bg-blue-500/20 text-white"
-                            : "border-gray-600 bg-[#2a2a2a] text-gray-300 hover:border-gray-500"
-                        }`}
-                      >
-                        <div className="font-semibold">Blackjack</div>
-                        <div className="text-xs mt-1 opacity-75">Classic 21</div>
-                      </button>
-                      <button
-                        onClick={() => setSelectedGame(SelectedGame.BS)}
-                        className={`px-4 py-3 rounded-lg border-2 transition-all ${
-                          selectedGame === SelectedGame.BS
-                            ? "border-blue-500 bg-blue-500/20 text-white"
-                            : "border-gray-600 bg-[#2a2a2a] text-gray-300 hover:border-gray-500"
-                        }`}
-                      >
-                        <div className="font-semibold">BS</div>
-                        <div className="text-xs mt-1 opacity-75">Bluffing game</div>
-                      </button>
+            {progressMessage && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full shrink-0"></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-blue-800 font-medium text-sm sm:text-base break-words">
+                      {progressMessage}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6 sm:p-8">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800 text-center">
+                Lobby
+              </h2>
+              {joinedInfo && (
+                <div>
+                  <div className="mb-6 text-center text-gray-700">
+                    <span className="text-base sm:text-lg">Joined as: </span>
+                    <strong className="text-gray-900 text-lg sm:text-xl">{joinedInfo.name}</strong>
+                    {joinedInfo.isLeader && (
+                      <span className="ml-3 px-3 py-1 bg-amber-100 text-amber-800 text-sm rounded-full font-medium inline-block">
+                        👑 Leader
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mb-6">
+                    <div className="text-base text-gray-600 mb-3 font-medium text-center">
+                      Players ({joinedInfo.clients})
+                    </div>
+                    <div className="flex flex-col gap-3 max-h-64 overflow-y-auto">
+                      {joinedRoom &&
+                        joinedRoom.state.players &&
+                        Array.from(joinedRoom.state.players.values()).map((player) => (
+                          <div
+                            key={player.id}
+                            className="flex items-center gap-4 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 px-4 py-3 rounded-lg hover:shadow-md transition-shadow"
+                          >
+                            {player.avatarUrl ? (
+                              <img
+                                src={player.avatarUrl}
+                                alt={player.username}
+                                className="w-12 h-12 rounded-full shrink-0 border-2 border-gray-200"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm">
+                                {player.username.charAt(0).toUpperCase() || "P"}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-gray-800 font-semibold text-base sm:text-lg truncate">
+                                {player.username}
+                              </p>
+                              {player.id === joinedRoom.state.lobbyLeader && (
+                                <span className="text-xs text-amber-600 font-medium">
+                                  👑 Leader
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                     </div>
                   </div>
-                  {/* TODO: use @deckards/common to set these requirements on both client and server without
+
+                  {joinedInfo.isLeader && (
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <label className="block text-base text-gray-600 mb-3 font-medium text-center">
+                          Select a Game:
+                        </label>
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                          <button
+                            onClick={() => setSelectedGame(SelectedGame.BLACKJACK)}
+                            className={`px-4 py-4 rounded-xl border-2 transition-all ${
+                              selectedGame === SelectedGame.BLACKJACK
+                                ? "border-blue-500 bg-blue-50 text-blue-800 shadow-md"
+                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm"
+                            }`}
+                          >
+                            <div className="font-bold text-base sm:text-lg">🃏 Blackjack</div>
+                            <div className="text-xs mt-1 opacity-70">Classic 21</div>
+                          </button>
+                          <button
+                            onClick={() => setSelectedGame(SelectedGame.BS)}
+                            className={`px-4 py-4 rounded-xl border-2 transition-all ${
+                              selectedGame === SelectedGame.BS
+                                ? "border-blue-500 bg-blue-50 text-blue-800 shadow-md"
+                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm"
+                            }`}
+                            // will be delivered in the future!
+                            disabled={true}
+                          >
+                            <div className="font-bold text-base sm:text-lg">🎯 BS</div>
+                            <div className="text-xs mt-1 opacity-70">Bluffing game</div>
+                          </button>
+                        </div>
+                      </div>
+                      {/* TODO: use @deckards/common to set these requirements on both client and server without
                   repeating the logic
                    */}
-                  <button
-                    onClick={handleStartGame}
-                    className={`px-3 py-2 rounded ${
-                      (selectedGame === SelectedGame.BLACKJACK &&
-                        joinedInfo.clients >= 1 &&
-                        joinedInfo.clients <= 7) ||
-                      (selectedGame === SelectedGame.BS && joinedInfo.clients === 2)
-                        ? "bg-[#ef4444] hover:bg-[#dc2626] cursor-pointer"
-                        : "bg-gray-600 cursor-not-allowed opacity-50"
-                    }`}
-                    disabled={
-                      (selectedGame === SelectedGame.BLACKJACK &&
-                        (joinedInfo.clients < 1 || joinedInfo.clients > 7)) ||
-                      (selectedGame === SelectedGame.BS && joinedInfo.clients !== 2)
-                    }
-                  >
-                    Start Game
-                  </button>
-                  {selectedGame === SelectedGame.BS && joinedInfo.clients !== 2 && (
-                    <p className="text-xs text-gray-400">BS requires exactly 2 players</p>
+                      <button
+                        onClick={handleStartGame}
+                        className={`w-full px-6 py-4 rounded-xl font-bold transition-all text-base sm:text-lg ${
+                          (selectedGame === SelectedGame.BLACKJACK &&
+                            joinedInfo.clients >= 1 &&
+                            joinedInfo.clients <= 7) ||
+                          (selectedGame === SelectedGame.BS && joinedInfo.clients === 2)
+                            ? "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white cursor-pointer shadow-lg hover:shadow-xl"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        }`}
+                        disabled={
+                          (selectedGame === SelectedGame.BLACKJACK &&
+                            (joinedInfo.clients < 1 || joinedInfo.clients > 7)) ||
+                          (selectedGame === SelectedGame.BS && joinedInfo.clients !== 2)
+                        }
+                      >
+                        🎮 Start Game
+                      </button>
+                      {selectedGame === SelectedGame.BS && joinedInfo.clients !== 2 && (
+                        <p className="text-sm text-gray-500 text-center">
+                          BS requires exactly 2 players
+                        </p>
+                      )}
+                      {selectedGame === SelectedGame.BLACKJACK &&
+                        (joinedInfo.clients < 1 || joinedInfo.clients > 7) && (
+                          <p className="text-sm text-gray-500 text-center">
+                            Blackjack requires between 1 and 7 players
+                          </p>
+                        )}
+                    </div>
                   )}
-                  {selectedGame === SelectedGame.BLACKJACK &&
-                    (joinedInfo.clients < 1 || joinedInfo.clients > 7) && (
-                      <p className="text-xs text-gray-400">
-                        Blackjack requires between 1 and 7 players
+
+                  {!joinedInfo.isLeader && (
+                    <div className="text-center text-gray-500 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                      <p className="text-sm sm:text-base">
+                        ⏳ Waiting for lobby leader to start the game...
                       </p>
-                    )}
+                    </div>
+                  )}
                 </div>
               )}
-
-              {!joinedInfo.isLeader && (
-                <div className="text-sm text-gray-400">
-                  Waiting for lobby leader to start the game...
+              {!joinedInfo && (
+                <div className="text-center text-gray-500 py-8">
+                  <div className="animate-pulse text-base sm:text-lg">Joining lobby...</div>
                 </div>
               )}
             </div>
-          )}
-          {!joinedInfo && <div className="mt-4 text-gray-400">Joining lobby...</div>}
+          </div>
         </div>
       )}
 

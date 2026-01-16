@@ -294,14 +294,14 @@ export function Blackjack({
 
   if (!isLoaded) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#101010] text-white">
+      <div className="flex items-center justify-center h-screen bg-emerald-50 text-emerald-800 font-medium">
         Loading Assets...
       </div>
     );
   }
 
   return (
-    <div className="relative w-screen h-screen bg-[#101010] overflow-hidden">
+    <div className="relative w-screen h-screen bg-emerald-800 overflow-hidden">
       <div className="absolute inset-0 z-0">
         {/* show the hands */}
         <Application resizeTo={window} backgroundAlpha={0} resolution={1}>
@@ -348,19 +348,19 @@ export function Blackjack({
 
       <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-8">
         <div className="flex flex-col items-center">
-          <h2 className="text-yellow-400 text-3xl font-bold drop-shadow-md">Dealer</h2>
-          <p className="text-yellow-200/80 text-sm">Score: {dealerDisplayScore}</p>
+          <h2 className="text-white text-2xl sm:text-3xl font-bold drop-shadow-md">Dealer</h2>
+          <p className="text-emerald-100 text-sm">Score: {dealerDisplayScore}</p>
         </div>
 
         {isGameOver && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-black/80 border-4 border-yellow-400 rounded-lg px-12 py-8 text-center max-h-[80vh] flex flex-col mb-40">
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="bg-white/95 border-2 border-amber-400 rounded-xl px-6 sm:px-12 py-6 sm:py-8 text-center max-h-[80vh] flex flex-col mb-20 sm:mb-40 shadow-xl max-w-sm sm:max-w-md w-full">
               {winners.length > 0 ? (
                 <>
-                  <h2 className="text-yellow-400 text-4xl font-bold mb-4 drop-shadow-lg">
-                    WINNERS!
+                  <h2 className="text-amber-600 text-2xl sm:text-4xl font-bold mb-4">
+                    🎉 WINNERS!
                   </h2>
-                  <div className="text-white text-2xl space-y-2 overflow-y-auto max-h-[60vh] pointer-events-auto pr-4">
+                  <div className="text-gray-800 text-lg sm:text-2xl space-y-2 overflow-y-auto max-h-[60vh] pointer-events-auto pr-2">
                     {winners.map((winner, idx) => (
                       <div key={idx} className="font-semibold">
                         {winner}
@@ -370,8 +370,8 @@ export function Blackjack({
                 </>
               ) : (
                 <>
-                  <h2 className="text-gray-400 text-4xl font-bold drop-shadow-lg">Nobody won...</h2>
-                  <p className="text-gray-500 text-lg mt-2">Better luck next round!</p>
+                  <h2 className="text-gray-600 text-2xl sm:text-4xl font-bold">Nobody won...</h2>
+                  <p className="text-gray-500 text-base sm:text-lg mt-2">Better luck next round!</p>
                 </>
               )}
             </div>
@@ -385,14 +385,14 @@ export function Blackjack({
             {leftPlayers.map((other, idx) => (
               <div
                 key={other.username}
-                className="bg-black/50 px-3 py-2 rounded absolute"
+                className="bg-white/90 px-3 py-2 rounded-lg shadow-md absolute"
                 style={{
                   left: `30px`,
                   top: `${sidePlayerStartY - 110 + idx * sidePlayerSpacing}px`,
                 }}
               >
-                <p className="text-blue-400 font-semibold text-sm">{other.username}</p>
-                <p className="text-blue-200/80 text-xs">Score: {other.displayScore}</p>
+                <p className="text-gray-800 font-semibold text-sm">{other.username}</p>
+                <p className="text-gray-600 text-xs">Score: {other.displayScore}</p>
               </div>
             ))}
           </div>
@@ -403,14 +403,14 @@ export function Blackjack({
             {rightPlayers.map((other, idx) => (
               <div
                 key={other.username}
-                className="bg-black/50 px-3 py-2 rounded absolute"
+                className="bg-white/90 px-3 py-2 rounded-lg shadow-md absolute"
                 style={{
                   left: `${windowSize.width - 220}px`,
                   top: `${sidePlayerStartY - 110 + idx * sidePlayerSpacing}px`,
                 }}
               >
-                <p className="text-blue-400 font-semibold text-sm">{other.username}</p>
-                <p className="text-blue-200/80 text-xs">Score: {other.displayScore}</p>
+                <p className="text-gray-800 font-semibold text-sm">{other.username}</p>
+                <p className="text-gray-600 text-xs">Score: {other.displayScore}</p>
               </div>
             ))}
           </div>
@@ -418,15 +418,14 @@ export function Blackjack({
 
         {isMobile && otherPlayers.length > 0 && (
           <button
-            className="absolute top-4 right-4 z-20 bg-black/70 hover:bg-black/90 p-3 rounded-lg pointer-events-auto transition-colors"
+            className="absolute top-4 right-4 z-20 bg-white/90 hover:bg-white p-3 rounded-lg pointer-events-auto transition-colors shadow-md"
             onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
             aria-label="Toggle players panel"
           >
-            {/* like my amazing hamburger icon? */}
             <div className="flex flex-col gap-1.5 w-6">
-              <div className="h-0.5 bg-white rounded"></div>
-              <div className="h-0.5 bg-white rounded"></div>
-              <div className="h-0.5 bg-white rounded"></div>
+              <div className="h-0.5 bg-gray-700 rounded"></div>
+              <div className="h-0.5 bg-gray-700 rounded"></div>
+              <div className="h-0.5 bg-gray-700 rounded"></div>
             </div>
           </button>
         )}
@@ -436,22 +435,22 @@ export function Blackjack({
           <>
             {isSidePanelOpen && (
               <div
-                className="absolute inset-0 bg-black/50 z-30 pointer-events-auto"
+                className="absolute inset-0 bg-black/30 z-30 pointer-events-auto"
                 onClick={() => setIsSidePanelOpen(false)}
               />
             )}
 
             <div
-              className={`absolute top-0 right-0 h-full w-72 bg-[#1a1a1a] border-l-2 border-yellow-400/30 z-40 transition-transform duration-300 ease-in-out pointer-events-auto overflow-y-auto ${
+              className={`absolute top-0 right-0 h-full w-72 bg-white border-l-2 border-emerald-200 z-40 transition-transform duration-300 ease-in-out pointer-events-auto overflow-y-auto shadow-xl ${
                 isSidePanelOpen ? "translate-x-0" : "translate-x-full"
               }`}
             >
               <div className="p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-yellow-400 text-lg font-bold">Other Players</h3>
+                  <h3 className="text-gray-800 text-lg font-bold">Other Players</h3>
                   <button
                     onClick={() => setIsSidePanelOpen(false)}
-                    className="text-white hover:text-yellow-400 text-2xl transition-colors"
+                    className="text-gray-500 hover:text-gray-700 text-2xl transition-colors"
                     aria-label="Close panel"
                   >
                     x
@@ -459,21 +458,21 @@ export function Blackjack({
                 </div>
 
                 {otherPlayers.length === 0 ? (
-                  <p className="text-gray-400 text-sm">No other players</p>
+                  <p className="text-gray-500 text-sm">No other players</p>
                 ) : (
                   <div className="space-y-4">
                     {otherPlayers.map((other) => (
                       <div
                         key={other.username}
-                        className="bg-black/50 p-3 rounded-lg border border-blue-400/30"
+                        className="bg-gray-50 p-3 rounded-lg border border-gray-200"
                       >
-                        <p className="text-blue-400 font-semibold mb-1">{other.username}</p>
-                        <p className="text-blue-200/80 text-sm mb-2">Score: {other.displayScore}</p>
+                        <p className="text-gray-800 font-semibold mb-1">{other.username}</p>
+                        <p className="text-gray-600 text-sm mb-2">Score: {other.displayScore}</p>
                         <div className="flex gap-1 flex-wrap">
                           {other.hand.map((card, idx) => (
                             <div
                               key={`${card.suit}-${card.rank}-${idx}`}
-                              className="text-xs bg-white/10 px-2 py-1 rounded"
+                              className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded font-medium"
                             >
                               {card.isHidden ? "?" : `${card.rank}`}
                             </div>
@@ -488,15 +487,17 @@ export function Blackjack({
           </>
         )}
 
-        <div className="flex flex-col items-center gap-6">
-          <div className="text-center">
-            <p className="text-green-200/80 text-2xl">Score: {playerScore || "?"}</p>
+        <div className="flex flex-col items-center gap-4 sm:gap-6">
+          <div className="text-center bg-white/90 px-4 py-2 rounded-lg shadow-md">
+            <p className="text-emerald-800 text-xl sm:text-2xl font-bold">
+              Score: {playerScore || "?"}
+            </p>
           </div>
 
-          <div className="flex gap-4 pointer-events-auto pb-10">
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 pointer-events-auto pb-6 sm:pb-10 px-4">
             {!isGameStarted && isLeader && (
               <button
-                className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold shadow-lg transition-transform active:scale-95"
+                className="px-4 sm:px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-lg transition-all active:scale-95 text-sm sm:text-base"
                 onClick={handleStartGame}
               >
                 START GAME
@@ -506,10 +507,10 @@ export function Blackjack({
             {isGameStarted && !isGameOver && (
               <>
                 <button
-                  className={`px-6 py-2 text-white rounded font-bold shadow-lg transition-transform ${
+                  className={`px-4 sm:px-6 py-2.5 text-white rounded-lg font-bold shadow-lg transition-all text-sm sm:text-base ${
                     canPlay
-                      ? "bg-blue-600 hover:bg-blue-500 active:scale-95"
-                      : "bg-gray-600 cursor-not-allowed opacity-50"
+                      ? "bg-blue-600 hover:bg-blue-700 active:scale-95"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                   onClick={handleHit}
                   disabled={!canPlay}
@@ -518,10 +519,10 @@ export function Blackjack({
                 </button>
 
                 <button
-                  className={`px-6 py-2 text-white rounded font-bold shadow-lg transition-transform ${
+                  className={`px-4 sm:px-6 py-2.5 text-white rounded-lg font-bold shadow-lg transition-all text-sm sm:text-base ${
                     canPlay
-                      ? "bg-red-600 hover:bg-red-500 active:scale-95"
-                      : "bg-gray-600 cursor-not-allowed opacity-50"
+                      ? "bg-rose-600 hover:bg-rose-700 active:scale-95"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                   onClick={handleStand}
                   disabled={!canPlay}
@@ -535,14 +536,14 @@ export function Blackjack({
               <>
                 {isLeader && (
                   <button
-                    className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold shadow-lg transition-transform active:scale-95"
+                    className="px-4 sm:px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-lg transition-all active:scale-95 text-sm sm:text-base"
                     onClick={handleStartGame}
                   >
                     NEW ROUND
                   </button>
                 )}
                 {!isLeader && (
-                  <div className="px-6 py-2 text-gray-400 text-sm">
+                  <div className="px-4 py-2.5 text-white/80 text-xs sm:text-sm bg-black/20 rounded-lg">
                     Waiting for leader to start new round...
                   </div>
                 )}
@@ -550,7 +551,7 @@ export function Blackjack({
             )}
 
             <button
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded font-bold shadow-lg transition-transform active:scale-95"
+              className="px-3 sm:px-4 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-bold shadow-lg transition-all active:scale-95 text-sm sm:text-base"
               onClick={handleLeave}
             >
               LEAVE
