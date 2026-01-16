@@ -54,33 +54,7 @@ export abstract class CardGameRoom<TState extends GameState> extends Room<TState
     tempDeck.forEach((card) => this.state.deck.push(card));
   }
 
-  // deals specified amount of cards to each player from the room wide deck
-  // (everyone shares the same standard deck, though this could be modified per game)
-  // TODO: modify this to deal differently per game type; so far it's
-  // only meant for blackjack
-  dealCards(amount: number) {
-    this.state.players.forEach((p) => {
-      for (let i = 0; i < amount; i++) {
-        if (this.state.deck.length > 0) {
-          const card = this.state.deck.pop();
-          if (card) {
-            // Mark first card as hidden (hole card)
-            // card.isHidden = i === 0;
-
-            // add card to each client's view
-            // this.clients.forEach((c) => {
-            //   if (c.view.has(card)) return;
-            //   c.view.add(card);
-            // });
-
-            card.ownerId = p.id;
-
-            p.hand.push(card);
-          }
-        }
-      }
-    });
-  }
+  protected abstract dealCards(amount: number): void;
 
   protected abstract handleCardPlay(client: Client, cardIndex: number): void;
 }

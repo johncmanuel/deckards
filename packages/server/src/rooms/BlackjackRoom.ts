@@ -289,5 +289,19 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     }
   }
 
+  dealCards(amount: number) {
+    this.state.players.forEach((p) => {
+      for (let i = 0; i < amount; i++) {
+        if (this.state.deck.length > 0) {
+          const card = this.state.deck.pop();
+          if (card) {
+            card.ownerId = p.id;
+            p.hand.push(card);
+          }
+        }
+      }
+    });
+  }
+
   handleCardPlay(client: Client, cardIndex: number) {}
 }
