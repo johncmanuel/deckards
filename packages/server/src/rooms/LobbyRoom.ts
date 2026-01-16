@@ -72,10 +72,8 @@ export class LobbyRoom extends Room<GameState> {
     });
   }
 
-  // TODO: account for players joining w/ discord context
   // auth contains the data returned from the onAuth method
   // https://docs.colyseus.io/auth/room#server-onauth-method
-
   onJoin(client: Client, options: LobbyOptions, auth: AuthContext) {
     console.log(options.username, "joined:", options.channelId, "auth", auth);
 

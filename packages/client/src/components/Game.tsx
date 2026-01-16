@@ -167,7 +167,6 @@ export function Game() {
 
   const handleStartGame = () => {
     if (joinedRoom) {
-      // TODO: may need to send the token to the server? ATM, starting a game room requires auth
       const options: VoteGameMessage = { game: selectedGame };
       joinedRoom.send("start_game", options);
     }
