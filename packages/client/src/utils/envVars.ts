@@ -1,1 +1,1 @@
-export const isDevelopment = import.meta.env.PROD === false;
+export const isDevelopment = import.meta.env.DEV;
