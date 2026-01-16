@@ -3,7 +3,7 @@ name: Deploy Server to DigitalOcean VPS
 on:
   push:
     branches:
-      - master 
+      - master
     paths:
       - "packages/server/**"
       - "packages/common/**"

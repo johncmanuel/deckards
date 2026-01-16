@@ -67,7 +67,7 @@ export function Blackjack({
   });
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
 
-  // after some eyeballing on the dev tools using different screen sizes, 
+  // after some eyeballing on the dev tools using different screen sizes,
   // i've decided to go with this value
   const MOBILE_WIDTH_THRESHOLD_PX = 908;
   const isMobile = windowSize.width < MOBILE_WIDTH_THRESHOLD_PX;
@@ -221,7 +221,7 @@ export function Blackjack({
     }
   };
 
-  // UI isn't perfect yet, but this will do for now, lol 
+  // UI isn't perfect yet, but this will do for now, lol
 
   // constants for computing UI layout
 
