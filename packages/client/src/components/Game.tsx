@@ -18,6 +18,7 @@ import {
 } from "@deckards/common";
 import Blackjack from "./Blackjack";
 import { isDevelopment } from "../utils/envVars";
+import AnimatedLobbyBackground from "./AnimatedLobbyBackground";
 
 type Joined = { id: string; name: string; clients: number; isLeader: boolean };
 
@@ -175,8 +176,10 @@ export function Game() {
   return (
     <>
       {!blackjackRoom && (
-        <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-3xl">
+        <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4 relative overflow-hidden">
+          <AnimatedLobbyBackground numCards={50} />
+
+          <div className="w-full max-w-3xl relative z-10">
             {errorMessage && (
               <div className="mb-6 p-4 bg-red-50 border border-red-300 rounded-lg shadow-sm">
                 <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
