@@ -20,6 +20,7 @@ interface OtherPlayer {
   hand: Card[];
   score: number;
   displayScore: string;
+  isCurrentTurn: boolean;
 }
 
 interface WindowDimensions {
@@ -55,11 +56,14 @@ export function Blackjack({
   const [dealerHand, setDealerHand] = useState<Card[]>([]);
   const [otherPlayers, setOtherPlayers] = useState<OtherPlayer[]>([]);
   const [playerScore, setPlayerScore] = useState(0);
+  const [roundTimeLeft, setRoundTimeLeft] = useState(0);
   const [dealerDisplayScore, setDealerDisplayScore] = useState<string>("?");
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
   const [isLeader, setIsLeader] = useState(false);
+  const [isMyTurn, setIsMyTurn] = useState(false);
+  const [currentTurnUsername, setCurrentTurnUsername] = useState<string | null>(null);
   const [winners, setWinners] = useState<string[]>([]);
   const [windowSize, setWindowSize] = useState<WindowDimensions>({
     width: window.innerWidth,
@@ -117,6 +121,17 @@ export function Blackjack({
       const currentPlayer = room.state.players.get(room.sessionId) as BlackjackPlayer | undefined;
 
       setIsLeader(room.sessionId === room.state.gameLeader);
+      
+      const isCurrentPlayersTurn = room.state.currentTurn === room.sessionId;
+      setIsMyTurn(isCurrentPlayersTurn);
+      setRoundTimeLeft(room.state.roundTimeLeft);
+      
+      if (room.state.currentTurn) {
+        const turnPlayer = room.state.players.get(room.state.currentTurn);
+        setCurrentTurnUsername(turnPlayer?.username || null);
+      } else {
+        setCurrentTurnUsername(null);
+      }
 
       if (currentPlayer) {
         const playerCards = Array.from(currentPlayer.hand ?? []).map((serverCard) => {
@@ -126,7 +141,7 @@ export function Blackjack({
 
         setPlayerHand(playerCards);
         setPlayerScore(currentPlayer.roundScore);
-        setCanPlay(!currentPlayer.isBusted && !currentPlayer.isStanding);
+        setCanPlay(!currentPlayer.isBusted && !currentPlayer.isStanding && isCurrentPlayersTurn);
       }
 
       // update other players
@@ -146,6 +161,7 @@ export function Blackjack({
               hand: hand,
               score: player.roundScore,
               displayScore: formatObfuscatedScore(hand, player.roundScore),
+              isCurrentTurn: room.state.currentTurn === sessionId,
             });
           }
         });
@@ -350,6 +366,22 @@ export function Blackjack({
         <div className="flex flex-col items-center">
           <h2 className="text-white text-2xl sm:text-3xl font-bold drop-shadow-md">Dealer</h2>
           <p className="text-emerald-100 text-sm">Score: {dealerDisplayScore}</p>
+          {isGameStarted && !isGameOver && currentTurnUsername && (
+            <div className="mt-3 flex items-center gap-3">
+              <div className="px-4 py-2 bg-amber-400 text-amber-900 rounded-full font-bold text-sm shadow-lg">
+                🎯 {isMyTurn ? "Your Turn!" : `${currentTurnUsername}'s Turn`}
+              </div>
+              {roundTimeLeft > 0 && (
+                <div className={`px-3 py-2 rounded-full font-bold text-sm shadow-lg ${
+                  roundTimeLeft <= 10 
+                    ? 'bg-red-500 text-white animate-pulse' 
+                    : 'bg-white/90 text-gray-800'
+                }`}>
+                  ⏱️ {roundTimeLeft}s
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {isGameOver && (
@@ -385,13 +417,19 @@ export function Blackjack({
             {leftPlayers.map((other, idx) => (
               <div
                 key={other.username}
-                className="bg-white/90 px-3 py-2 rounded-lg shadow-md absolute"
+                className={`px-3 py-2 rounded-lg shadow-md absolute transition-all ${
+                  other.isCurrentTurn 
+                    ? 'bg-amber-200 ring-2 ring-amber-400' 
+                    : 'bg-white/90'
+                }`}
                 style={{
                   left: `30px`,
                   top: `${sidePlayerStartY - 110 + idx * sidePlayerSpacing}px`,
                 }}
               >
-                <p className="text-gray-800 font-semibold text-sm">{other.username}</p>
+                <p className="text-gray-800 font-semibold text-sm">
+                  {other.isCurrentTurn && '🎯 '}{other.username}
+                </p>
                 <p className="text-gray-600 text-xs">Score: {other.displayScore}</p>
               </div>
             ))}
@@ -403,13 +441,19 @@ export function Blackjack({
             {rightPlayers.map((other, idx) => (
               <div
                 key={other.username}
-                className="bg-white/90 px-3 py-2 rounded-lg shadow-md absolute"
+                className={`px-3 py-2 rounded-lg shadow-md absolute transition-all ${
+                  other.isCurrentTurn 
+                    ? 'bg-amber-200 ring-2 ring-amber-400' 
+                    : 'bg-white/90'
+                }`}
                 style={{
                   left: `${windowSize.width - 220}px`,
                   top: `${sidePlayerStartY - 110 + idx * sidePlayerSpacing}px`,
                 }}
               >
-                <p className="text-gray-800 font-semibold text-sm">{other.username}</p>
+                <p className="text-gray-800 font-semibold text-sm">
+                  {other.isCurrentTurn && '🎯 '}{other.username}
+                </p>
                 <p className="text-gray-600 text-xs">Score: {other.displayScore}</p>
               </div>
             ))}
@@ -464,9 +508,15 @@ export function Blackjack({
                     {otherPlayers.map((other) => (
                       <div
                         key={other.username}
-                        className="bg-gray-50 p-3 rounded-lg border border-gray-200"
+                        className={`p-3 rounded-lg border ${
+                          other.isCurrentTurn
+                            ? 'bg-amber-50 border-amber-400 ring-2 ring-amber-300'
+                            : 'bg-gray-50 border-gray-200'
+                        }`}
                       >
-                        <p className="text-gray-800 font-semibold mb-1">{other.username}</p>
+                        <p className="text-gray-800 font-semibold mb-1">
+                          {other.isCurrentTurn && '🎯 '}{other.username}
+                        </p>
                         <p className="text-gray-600 text-sm mb-2">Score: {other.displayScore}</p>
                         <div className="flex gap-1 flex-wrap">
                           {other.hand.map((card, idx) => (
@@ -488,7 +538,11 @@ export function Blackjack({
         )}
 
         <div className="flex flex-col items-center gap-4 sm:gap-6">
-          <div className="text-center bg-white/90 px-4 py-2 rounded-lg shadow-md">
+          <div className={`text-center px-4 py-2 rounded-lg shadow-md transition-all ${
+            isMyTurn && isGameStarted && !isGameOver
+              ? 'bg-amber-200 ring-2 ring-amber-400'
+              : 'bg-white/90'
+          }`}>
             <p className="text-emerald-800 text-xl sm:text-2xl font-bold">
               Score: {playerScore || "?"}
             </p>

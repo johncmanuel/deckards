@@ -13,6 +13,7 @@ export class BlackjackState extends GameState {
   /*@view()*/ @type([Card]) dealerHand = new ArraySchema<Card>();
   @type("string") gameLeader: string = "";
   @type("number") maxActivePlayers: number = 7;
+  @type("number") roundTimeLeft: number = 0;
 }
 
 export interface GameOverResults {

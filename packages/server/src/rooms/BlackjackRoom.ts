@@ -10,9 +10,17 @@ import { Delayed } from "colyseus";
 import { calculateHandScore } from "@deckards/common";
 // import { StateView } from "@colyseus/schema";
 
+interface GlobalTimers {
+  timeout: Delayed;
+  interval: Delayed;
+}
+
 export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   private autoStartTimer?: Delayed;
-  private readonly AUTO_START_DELAY_MS = 10000;
+  private globalTimer?: GlobalTimers;
+
+  private readonly AUTO_START_DELAY_MS = 10 * 1000;
+  private readonly ROUND_TIME_LIMIT_MS = 20 * 1000; 
 
   // TODO: create types for the options below
 
@@ -90,10 +98,12 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
 
   onDispose() {
     this.clearAutoStartTimer();
+    this.clearGlobalTimer();
   }
 
   startRound() {
     this.clearAutoStartTimer();
+    this.clearGlobalTimer();
 
     this.lock();
     this.shuffleDeck(6);
@@ -137,6 +147,75 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     }
 
     this.updateScores();
+    
+    const playerIds = Array.from(this.state.players.keys());
+    if (playerIds.length > 0) {
+      this.state.currentTurn = playerIds[0];
+      this.startGlobalTimer();
+    }
+  }
+
+  startGlobalTimer() {
+    this.clearGlobalTimer();
+    
+    this.state.roundTimeLeft = this.ROUND_TIME_LIMIT_MS / 1000; 
+
+    const updateInterval = this.clock.setInterval(() => {
+      if (this.state.roundTimeLeft > 0) {
+        this.state.roundTimeLeft -= 1;
+      }
+    }, 1000);
+
+    // Auto-stand current player when time runs out
+    const timeoutTimer = this.clock.setTimeout(() => {
+      console.log("Global timer expired, auto-standing current player");
+      const currentPlayerId = this.state.currentTurn;
+      if (currentPlayerId) {
+        const client = Array.from(this.clients).find(c => c.sessionId === currentPlayerId);
+        const player = this.state.players.get(currentPlayerId) as BlackjackPlayer;
+        console.log("Auto-standing player:", player?.username);
+        if (client && player && !player.isStanding && !player.isBusted) {
+          this.handleStand(client);
+        }
+      }
+      updateInterval.clear();
+    }, this.ROUND_TIME_LIMIT_MS);
+
+    this.globalTimer = { timeout: timeoutTimer, interval: updateInterval };
+  }
+
+  clearGlobalTimer() {
+    if (this.globalTimer) {
+      this.globalTimer.timeout.clear();
+      this.globalTimer.interval.clear();
+      this.globalTimer = undefined;
+    }
+    this.state.roundTimeLeft = 0;
+  }
+
+  moveToNextPlayer() {
+    const playerIds = Array.from(this.state.players.keys());
+    const currIdx = playerIds.indexOf(this.state.currentTurn);
+    
+    // find next player who hasn't stood or busted
+    for (let i = 1; i <= playerIds.length; i++) {
+      const nextIndex = (currIdx + i) % playerIds.length;
+      const nextPlayerId = playerIds[nextIndex];
+      const nextPlayer = this.state.players.get(nextPlayerId) as BlackjackPlayer;
+      
+        // restart global timer for the next player
+        // if no eligible players found,
+      if (!nextPlayer.isStanding && !nextPlayer.isBusted) {
+        this.state.currentTurn = nextPlayerId;
+        this.startGlobalTimer();
+        return;
+      }
+    }
+   
+    // if all players done, dealer goes next
+    this.state.currentTurn = "";
+    this.clearGlobalTimer();
+    this.playDealerTurn();
   }
 
   handleHit(client: Client) {
@@ -144,17 +223,19 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
 
     // only hit if not standing and not busted
     if (!player || player.isStanding || player.isBusted) return;
+    
+    // only current player can act
+    if (this.state.currentTurn !== client.sessionId) {
+      const msg: ServerMultiplayerError = { message: "It's not your turn!" };
+      client.send("error", msg);
+      return;
+    }
 
     const card = this.state.deck.pop();
     if (card) {
       card.isHidden = false;
       card.ownerId = player.id;
       player.hand.push(card);
-
-      // this.clients.forEach((c) => {
-      //   if (c.view.has(card)) return;
-      //   c.view.add(card);
-      // });
 
       this.updateScores();
 
@@ -169,11 +250,17 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   handleStand(client: Client) {
     const player = this.state.players.get(client.sessionId) as BlackjackPlayer;
     if (!player) return;
+    
+    // only current player can act (unless auto-standing from timeout)
+    if (this.state.currentTurn !== client.sessionId && !player.isBusted) {
+      const msg: ServerMultiplayerError = { message: "It's not your turn!" };
+      client.send("error", msg);
+      return;
+    }
 
     player.isStanding = true;
 
-    // after every stand, check if need to proceed to Dealer turn
-    this.checkForRoundCompletion();
+    this.moveToNextPlayer();
   }
 
   updateScores() {
@@ -182,7 +269,6 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       player.roundScore = calculateHandScore(player.hand);
     });
 
-    // Calculate dealer score based ONLY on visible cards?
     this.state.dealerScore = calculateHandScore(this.state.dealerHand);
   }
 
@@ -198,6 +284,8 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
   }
 
   async playDealerTurn() {
+    this.clearGlobalTimer();
+    
     const holeCard = this.state.dealerHand.at(1);
     if (holeCard) {
       holeCard.isHidden = false;
@@ -302,6 +390,4 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
       }
     });
   }
-
-  handleCardPlay(client: Client, cardIndex: number) {}
 }

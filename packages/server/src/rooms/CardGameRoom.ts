@@ -15,10 +15,6 @@ export abstract class CardGameRoom<TState extends GameState> extends Room<TState
 
   onCreate(options: any) {
     // setting state is done by child classes!
-
-    this.onMessage("play_card", (client, message) => {
-      this.handleCardPlay(client, message.cardIndex);
-    });
   }
 
   onJoin(client: Client, options: any) {
@@ -55,6 +51,4 @@ export abstract class CardGameRoom<TState extends GameState> extends Room<TState
   }
 
   protected abstract dealCards(amount: number): void;
-
-  protected abstract handleCardPlay(client: Client, cardIndex: number): void;
 }
