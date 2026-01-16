@@ -2,11 +2,8 @@
   "name": "deckards",
   "module": "index.ts",
   "devDependencies": {
-    "@types/bun": "latest",
-    "@vitejs/plugin-react": "^5.1.2",
     "cloudflared": "^0.7.1",
-    "prettier": "^3.7.4",
-    "vite": "^7.3.0"
+    "prettier": "^3.7.4"
   },
   "peerDependencies": {
     "typescript": "^5"
