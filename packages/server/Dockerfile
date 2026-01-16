@@ -1,31 +1,29 @@
-# https://docs.colyseus.io/deployment#docker
+# intended to run from the root dir
+FROM oven/bun:alpine 
 
-FROM node:22-alpine AS builder
+WORKDIR /app
 
-WORKDIR /usr/src/app
+COPY package.json bun.lock ./
+COPY packages/server/package.json ./packages/server/
+COPY packages/common/package.json ./packages/common/
 
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
+# copy client package.json to avoid bun lockfile issues 
+# but don't copy the client src code
+COPY packages/client/package.json ./packages/client/
 
-RUN npm ci
+RUN bun install --production
 
-COPY . .
+COPY packages/common/src ./packages/common/src
+COPY packages/server/src ./packages/server/src
 
-RUN npm run build
+# i'll add this just in case it's needed
+COPY packages/server/ecosystem.config.cjs ./packages/server/ecosystem.config.cjs
 
-# run without dev dependencies
-FROM node:22-alpine
-
-WORKDIR /usr/src/app
-
-COPY package*.json ./
-
-RUN npm ci --only=production
-
-COPY --from=builder /usr/src/app/build ./build
+# remove anything client related
+RUN rm -rf packages/client
 
 EXPOSE 2567
 ENV NODE_ENV=production
+USER bun
 
-# CMD [ "npm", "start" ]
-CMD ["node", "build/index.js"]
+CMD ["bun", "packages/server/src/index.ts"]
