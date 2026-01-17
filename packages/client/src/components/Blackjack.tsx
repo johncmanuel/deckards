@@ -121,11 +121,11 @@ export function Blackjack({
       const currentPlayer = room.state.players.get(room.sessionId) as BlackjackPlayer | undefined;
 
       setIsLeader(room.sessionId === room.state.gameLeader);
-      
+
       const isCurrentPlayersTurn = room.state.currentTurn === room.sessionId;
       setIsMyTurn(isCurrentPlayersTurn);
       setRoundTimeLeft(room.state.roundTimeLeft);
-      
+
       if (room.state.currentTurn) {
         const turnPlayer = room.state.players.get(room.state.currentTurn);
         setCurrentTurnUsername(turnPlayer?.username || null);
@@ -372,11 +372,13 @@ export function Blackjack({
                 🎯 {isMyTurn ? "Your Turn!" : `${currentTurnUsername}'s Turn`}
               </div>
               {roundTimeLeft > 0 && (
-                <div className={`px-3 py-2 rounded-full font-bold text-sm shadow-lg ${
-                  roundTimeLeft <= 10 
-                    ? 'bg-red-500 text-white animate-pulse' 
-                    : 'bg-white/90 text-gray-800'
-                }`}>
+                <div
+                  className={`px-3 py-2 rounded-full font-bold text-sm shadow-lg ${
+                    roundTimeLeft <= 10
+                      ? "bg-red-500 text-white animate-pulse"
+                      : "bg-white/90 text-gray-800"
+                  }`}
+                >
                   ⏱️ {roundTimeLeft}s
                 </div>
               )}
@@ -418,9 +420,7 @@ export function Blackjack({
               <div
                 key={other.username}
                 className={`px-3 py-2 rounded-lg shadow-md absolute transition-all ${
-                  other.isCurrentTurn 
-                    ? 'bg-amber-200 ring-2 ring-amber-400' 
-                    : 'bg-white/90'
+                  other.isCurrentTurn ? "bg-amber-200 ring-2 ring-amber-400" : "bg-white/90"
                 }`}
                 style={{
                   left: `30px`,
@@ -428,7 +428,8 @@ export function Blackjack({
                 }}
               >
                 <p className="text-gray-800 font-semibold text-sm">
-                  {other.isCurrentTurn && '🎯 '}{other.username}
+                  {other.isCurrentTurn && "🎯 "}
+                  {other.username}
                 </p>
                 <p className="text-gray-600 text-xs">Score: {other.displayScore}</p>
               </div>
@@ -442,9 +443,7 @@ export function Blackjack({
               <div
                 key={other.username}
                 className={`px-3 py-2 rounded-lg shadow-md absolute transition-all ${
-                  other.isCurrentTurn 
-                    ? 'bg-amber-200 ring-2 ring-amber-400' 
-                    : 'bg-white/90'
+                  other.isCurrentTurn ? "bg-amber-200 ring-2 ring-amber-400" : "bg-white/90"
                 }`}
                 style={{
                   left: `${windowSize.width - 220}px`,
@@ -452,7 +451,8 @@ export function Blackjack({
                 }}
               >
                 <p className="text-gray-800 font-semibold text-sm">
-                  {other.isCurrentTurn && '🎯 '}{other.username}
+                  {other.isCurrentTurn && "🎯 "}
+                  {other.username}
                 </p>
                 <p className="text-gray-600 text-xs">Score: {other.displayScore}</p>
               </div>
@@ -510,12 +510,13 @@ export function Blackjack({
                         key={other.username}
                         className={`p-3 rounded-lg border ${
                           other.isCurrentTurn
-                            ? 'bg-amber-50 border-amber-400 ring-2 ring-amber-300'
-                            : 'bg-gray-50 border-gray-200'
+                            ? "bg-amber-50 border-amber-400 ring-2 ring-amber-300"
+                            : "bg-gray-50 border-gray-200"
                         }`}
                       >
                         <p className="text-gray-800 font-semibold mb-1">
-                          {other.isCurrentTurn && '🎯 '}{other.username}
+                          {other.isCurrentTurn && "🎯 "}
+                          {other.username}
                         </p>
                         <p className="text-gray-600 text-sm mb-2">Score: {other.displayScore}</p>
                         <div className="flex gap-1 flex-wrap">
@@ -538,11 +539,13 @@ export function Blackjack({
         )}
 
         <div className="flex flex-col items-center gap-4 sm:gap-6">
-          <div className={`text-center px-4 py-2 rounded-lg shadow-md transition-all ${
-            isMyTurn && isGameStarted && !isGameOver
-              ? 'bg-amber-200 ring-2 ring-amber-400'
-              : 'bg-white/90'
-          }`}>
+          <div
+            className={`text-center px-4 py-2 rounded-lg shadow-md transition-all ${
+              isMyTurn && isGameStarted && !isGameOver
+                ? "bg-amber-200 ring-2 ring-amber-400"
+                : "bg-white/90"
+            }`}
+          >
             <p className="text-emerald-800 text-xl sm:text-2xl font-bold">
               Score: {playerScore || "?"}
             </p>
