@@ -4,6 +4,7 @@ import { playground } from "@colyseus/playground";
 import { JWT } from "@colyseus/auth";
 import { json } from "express";
 import type { DiscordTokenResponse, DiscordUser } from "@deckards/common";
+import { SelectedGame, Activity} from "@deckards/common";
 
 /**
  * Import your Room files
@@ -20,8 +21,8 @@ export default config({
     /**
      * Define your room handlers:
      */
-    gameServer.define("lobby", LobbyRoom).filterBy(["channelId"]);
-    gameServer.define("blackjack", BlackjackRoom);
+    gameServer.define(Activity.LOBBY, LobbyRoom).filterBy(["channelId"]);
+    gameServer.define(SelectedGame.BLACKJACK, BlackjackRoom);
   },
 
   initializeExpress: (app) => {

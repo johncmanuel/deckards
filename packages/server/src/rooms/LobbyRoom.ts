@@ -1,10 +1,11 @@
 import { JWT } from "@colyseus/auth";
 import { Room, Client, matchMaker, AuthContext } from "@colyseus/core";
+import { SeatReservation } from "@colyseus/core/build/MatchMaker";
 import {
   Player,
   GameState,
-  ACTIVE_GAMES,
-  ACTIVITIES,
+  SelectedGame,
+  Activity,
   type VoteGameMessage,
   LobbyOptions,
 } from "@deckards/common";
@@ -28,27 +29,24 @@ export class LobbyRoom extends Room<GameState> {
       }
       console.log(`Lobby leader ${client.sessionId} starting ${message.game}`);
 
-      // shouldn't happen since in client side, there'll be buttons that always send valid games
-      // but adding this to make sure
-      if (!(message.game in ACTIVE_GAMES)) {
+      if (!Object.values(SelectedGame).includes(message.game)) {
         console.warn(`Invalid game selection: ${message.game}`);
         client.send("error", { message: "Invalid game selection." });
         return;
       }
 
       this.state.activeGame = message.game;
-      this.state.currentActivity = ACTIVITIES.PLAYING;
+      this.state.currentActivity = Activity.PLAYING;
 
       try {
-        const reservations: Map<string, any> = new Map();
-        const channelId = this.metadata?.channelId || options.channelId;
+        const reservations: Map<string, SeatReservation> = new Map();
+        const channelId = options.channelId;
 
         for (const [sessionId, player] of this.state.players.entries()) {
           const targetClient = Array.from(this.clients).find((c) => c.sessionId === sessionId);
           const auth = this.playersAuth.get(sessionId);
 
-          // TODO: modify based on selected game
-          const reservation = await matchMaker.joinOrCreate("blackjack", {
+          const reservation = await matchMaker.joinOrCreate(message.game, {
             auth,
             username: player.username,
             channelId: channelId,
@@ -75,21 +73,17 @@ export class LobbyRoom extends Room<GameState> {
   // auth contains the data returned from the onAuth method
   // https://docs.colyseus.io/auth/room#server-onauth-method
   onJoin(client: Client, options: LobbyOptions, auth: AuthContext) {
-    console.log(options.username, "joined:", options.channelId, "auth", auth);
+    console.log(options.username, "joined:", options.channelId);
 
     if (this.state.players.size === 0) {
       this.state.lobbyLeader = client.sessionId;
       console.log(`${options.username} is the lobby leader`);
     }
 
-    // store channelId in room metadata for later use
-    if (!this.metadata) {
-      this.setMetadata({ channelId: options.channelId });
-    }
-
     const newPlayer = new Player(
       client.sessionId,
       options.username || "Guest",
+      // TODO: find way to get avatar URLs
       // @ts-ignore
       options.avatarUrl || "",
     );

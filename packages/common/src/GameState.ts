@@ -30,24 +30,24 @@ export class Player extends Schema {
   }
 }
 
-export const ACTIVE_GAMES = {
-  NONE: "NONE",
-  BLACKJACK: "BLACKJACK",
-  BS: "BS",
-};
+export enum SelectedGame {
+  NONE = "NONE",
+  BLACKJACK = "BLACKJACK",
+  BS = "BS",
+}
 
-export const ACTIVITIES = {
-  LOBBY: "LOBBY",
-  PLAYING: "PLAYING",
-};
+export enum Activity {
+  LOBBY = "LOBBY",
+  PLAYING = "PLAYING",
+}
 
 export type VoteGameMessage = {
-  game: keyof typeof ACTIVE_GAMES;
+  game: SelectedGame;
 };
 
 export class GameState extends Schema {
-  @type("string") currentActivity = ACTIVITIES.LOBBY;
-  @type("string") activeGame = ACTIVE_GAMES.NONE;
+  @type("string") currentActivity = Activity.LOBBY;
+  @type("string") activeGame: SelectedGame = SelectedGame.NONE;
 
   // "sessionId" => Player
   @type({ map: Player }) players = new MapSchema<Player>();

@@ -1,7 +1,4 @@
-export enum SelectedGame {
-  BLACKJACK = "BLACKJACK",
-  BS = "BS",
-}
+import { SelectedGame } from "./GameState";
 
 export interface LobbyOptions {
   username: string;
@@ -10,5 +7,5 @@ export interface LobbyOptions {
 
 export interface LobbySeatReservationOptions {
   reservation: any; // don't want to add both client and server versions of colyseus in common to type check this, so leave it at any
-  game: string;
+  game: SelectedGame;
 }

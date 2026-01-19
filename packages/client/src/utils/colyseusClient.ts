@@ -1,4 +1,4 @@
-import type { BlackjackState, GameState, LobbyOptions } from "@deckards/common";
+import { type  GameState, type LobbyOptions, Activity } from "@deckards/common";
 import { Client, Room, type SeatReservation } from "colyseus.js";
 
 // Ensure colyseus is using the correct path when embedded in Discord
@@ -12,18 +12,18 @@ export async function joinOrCreateLobbyServer(
   options: LobbyOptions,
 ): Promise<Room<GameState> | null> {
   try {
-    const room = await colyseusClient.joinOrCreate("lobby", options);
+    const room = await colyseusClient.joinOrCreate(Activity.LOBBY, options);
     return room;
   } catch (err) {
     return null;
   }
 }
 
-export async function consumeSeatReservation(
+export async function consumeSeatReservation<T>(
   reservation: SeatReservation,
-): Promise<Room<BlackjackState> | null> {
+): Promise<Room<T> | null> {
   try {
-    const room = await colyseusClient.consumeSeatReservation<BlackjackState>(reservation);
+    const room = await colyseusClient.consumeSeatReservation<T>(reservation);
     return room;
   } catch (err) {
     return null;

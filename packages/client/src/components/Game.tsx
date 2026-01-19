@@ -117,7 +117,7 @@ export function Game() {
 
           if (message.game === SelectedGame.BLACKJACK) {
             try {
-              const gameRoom = await consumeSeatReservation(message.reservation);
+              const gameRoom = await consumeSeatReservation<BlackjackState>(message.reservation);
               if (gameRoom) {
                 setBlackjackRoom(gameRoom);
 
