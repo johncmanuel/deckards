@@ -105,7 +105,7 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     this.clearAutoStartTimer();
     this.clearGlobalTimer();
 
-    this.lock();
+    // this.lock();
     this.shuffleDeck(6);
 
     this.broadcast("round_started");
@@ -361,7 +361,7 @@ export class BlackjackRoom extends CardGameRoom<BlackjackState> {
     };
     this.broadcast("game_over", gameOverRes);
 
-    this.clock.setTimeout(() => this.unlock(), 3000);
+    // this.clock.setTimeout(() => this.unlock(), 3000);
 
     this.clearAutoStartTimer();
 

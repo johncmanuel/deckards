@@ -307,21 +307,21 @@ export function Game() {
                           (selectedGame === SelectedGame.BLACKJACK &&
                             joinedInfo.clients >= 1 &&
                             joinedInfo.clients <= 7) ||
-                          (selectedGame === SelectedGame.BS && joinedInfo.clients === 2)
+                          (selectedGame === SelectedGame.BS && joinedInfo.clients >= 1 && joinedInfo.clients <= 7)
                             ? "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white cursor-pointer shadow-lg hover:shadow-xl"
                             : "bg-gray-200 text-gray-400 cursor-not-allowed"
                         }`}
                         disabled={
                           (selectedGame === SelectedGame.BLACKJACK &&
                             (joinedInfo.clients < 1 || joinedInfo.clients > 7)) ||
-                          (selectedGame === SelectedGame.BS && joinedInfo.clients !== 2)
+                          (selectedGame === SelectedGame.BS && (joinedInfo.clients < 1 || joinedInfo.clients > 7))
                         }
                       >
                         🎮 Start Game
                       </button>
-                      {selectedGame === SelectedGame.BS && joinedInfo.clients !== 2 && (
+                      {selectedGame === SelectedGame.BS && (joinedInfo.clients < 1 || joinedInfo.clients > 7) && (
                         <p className="text-sm text-gray-500 text-center">
-                          BS requires exactly 2 players
+                          BS requires between 1 and 7 players
                         </p>
                       )}
                       {selectedGame === SelectedGame.BLACKJACK &&
