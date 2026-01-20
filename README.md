@@ -70,11 +70,11 @@ This project was created using `bun init` in bun v1.3.5. [Bun](https://bun.com) 
 
 ## Deployment
 
-There are 2 steps to setting this up: deploying the client and the server.
+Deployment with a CI/CD pipeline via GitHub Actions is already set up. Though for those that want to deploy this for themselves, there are 2 steps to setting this up: deploying the client and the server.
 
 ### Client
 
-Deploying the client is the same as any React + Vite application. Use any popular cloud providers (i.e Cloudflare Workers, Vercel, etc.) that support the client stack for easy deployment. Self-hosting is an option too (though a Dockerfile should be supplied for Docker deployments). Ensure the root directory is set to `/packages/client` rather than `/`.  
+Deploying the client is the same as any React + Vite application. Use any popular cloud providers (i.e., Cloudflare Workers, Vercel, etc.) that support the client stack for easy deployment. Self-hosting is also an option (though a Dockerfile should be provided for Docker deployments). Ensure the root directory is set to `/packages/client` rather than `/`.  
 
 ### Server
 
@@ -86,6 +86,14 @@ If wanted, the server's container image can be manually built using the command 
 docker build -t <name-of-server> -f packages/server/Dockerfile .
 docker run -d <name-of-server>
 ```
+
+### Discord
+
+Set the following fields for production. Ideally, you should have another Discord application purely for production rather than reusing the same one meant for development.
+
+Under: "OAuth2 → Redirect URL", use the public URL for the deployed client.
+Under: "URL Mappings → Target" for mapping `/`, use the public URL for the deployed client.
+Under: "URL Mappings → Target" for mapping `/colyseus`, use the public URL for the deployed server.
 
 ## References
 
