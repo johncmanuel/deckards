@@ -5,7 +5,7 @@ import {
   joinOrCreateLobbyServer,
 } from "../utils/colyseusClient";
 import { type Room } from "colyseus.js";
-import { discordSDK } from "../utils/discord";
+import { discordSDK, isEmbedded } from "../utils/discord";
 import { authenticate } from "../utils/auth";
 import {
   GameState,
@@ -31,11 +31,29 @@ export function Game() {
   const [selectedGame, setSelectedGame] = useState<SelectedGame>(SelectedGame.BLACKJACK);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [progressMessage, setProgressMessage] = useState<string | null>(null);
+  const [showDiscordWarning, setShowDiscordWarning] = useState<boolean>(!isEmbedded);
+
+  const [isBlackjack, setIsBlackjack] = useState<boolean>(false);
+  const [isBS, setIsBS] = useState<boolean>(false);
 
   // prevent duplicate join attempts to the server during development
   const isJoiningRef = useRef(false);
+  useEffect(() => {
+    if (!joinedInfo) {
+      setIsBlackjack(false);
+      setIsBS(false);
+      return;
+    }
+
+    if (selectedGame === SelectedGame.BLACKJACK) {
+      setIsBlackjack(joinedInfo.clients >= 1 && joinedInfo.clients <= 7);
+    } else if (selectedGame === SelectedGame.BS) {
+      setIsBS(joinedInfo.clients >= 1 && joinedInfo.clients <= 7);
+    }
+  }, [selectedGame, joinedInfo]);
 
   useEffect(() => {
+    // if (showDiscordWarning) return;
     if (joinedRoom || (isDevelopment && isJoiningRef.current)) return;
 
     const joinLobby = async () => {
@@ -164,7 +182,7 @@ export function Game() {
         isJoiningRef.current = false;
       }
     };
-  }, [joinedRoom]);
+  }, [joinedRoom, showDiscordWarning]);
 
   const handleStartGame = () => {
     if (joinedRoom) {
@@ -178,6 +196,32 @@ export function Game() {
       {!blackjackRoom && (
         <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4 relative overflow-hidden">
           <AnimatedLobbyBackground numCards={50} />
+
+          {!isDevelopment && showDiscordWarning && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+                <div className="text-center">
+                  <div className="text-5xl mb-4">⚠️</div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-3">
+                    Discord Activity Required
+                  </h2>
+                  <p className="text-gray-600 mb-6">
+                    This game is designed to be played as a Discord Activity. Though in the future,
+                    this'll be open to anyone outside of Discord. Errors will show if you continue
+                    further.
+                  </p>
+                  {
+                    <button
+                      onClick={() => setShowDiscordWarning(false)}
+                      className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+                    >
+                      Continue
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="w-full max-w-3xl relative z-10">
             {errorMessage && (
@@ -280,12 +324,12 @@ export function Game() {
                                 : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm"
                             }`}
                           >
-                            <div className="font-bold text-base sm:text-lg">🃏 Blackjack</div>
+                            <div className="font-bold text-base sm:text-lg">Blackjack</div>
                             <div className="text-xs mt-1 opacity-70">Classic 21</div>
                           </button>
                           <button
                             onClick={() => setSelectedGame(SelectedGame.BS)}
-                            className={`px-4 py-4 rounded-xl border-2 transition-all ${
+                            className={`px-4 py-4 rounded-xl border-2 transition-all cursor-not-allowed ${
                               selectedGame === SelectedGame.BS
                                 ? "border-blue-500 bg-blue-50 text-blue-800 shadow-md"
                                 : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm"
@@ -293,7 +337,7 @@ export function Game() {
                             // will be delivered in the future!
                             disabled={true}
                           >
-                            <div className="font-bold text-base sm:text-lg">🎯 BS</div>
+                            <div className="font-bold text-base sm:text-lg">BS</div>
                             <div className="text-xs mt-1 opacity-70">Bluffing game</div>
                           </button>
                         </div>
@@ -304,39 +348,31 @@ export function Game() {
                       <button
                         onClick={handleStartGame}
                         className={`w-full px-6 py-4 rounded-xl font-bold transition-all text-base sm:text-lg ${
-                          (selectedGame === SelectedGame.BLACKJACK &&
-                            joinedInfo.clients >= 1 &&
-                            joinedInfo.clients <= 7) ||
-                          (selectedGame === SelectedGame.BS && joinedInfo.clients >= 1 && joinedInfo.clients <= 7)
+                          isBlackjack || isBS
                             ? "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white cursor-pointer shadow-lg hover:shadow-xl"
                             : "bg-gray-200 text-gray-400 cursor-not-allowed"
                         }`}
-                        disabled={
-                          (selectedGame === SelectedGame.BLACKJACK &&
-                            (joinedInfo.clients < 1 || joinedInfo.clients > 7)) ||
-                          (selectedGame === SelectedGame.BS && (joinedInfo.clients < 1 || joinedInfo.clients > 7))
-                        }
+                        disabled={!(isBlackjack || isBS)}
                       >
-                        🎮 Start Game
+                        Start Game
                       </button>
-                      {selectedGame === SelectedGame.BS && (joinedInfo.clients < 1 || joinedInfo.clients > 7) && (
+                      {selectedGame === SelectedGame.BS && !isBS && (
                         <p className="text-sm text-gray-500 text-center">
                           BS requires between 1 and 7 players
                         </p>
                       )}
-                      {selectedGame === SelectedGame.BLACKJACK &&
-                        (joinedInfo.clients < 1 || joinedInfo.clients > 7) && (
-                          <p className="text-sm text-gray-500 text-center">
-                            Blackjack requires between 1 and 7 players
-                          </p>
-                        )}
+                      {selectedGame === SelectedGame.BLACKJACK && !isBlackjack && (
+                        <p className="text-sm text-gray-500 text-center">
+                          Blackjack requires between 1 and 7 players
+                        </p>
+                      )}
                     </div>
                   )}
 
                   {!joinedInfo.isLeader && (
                     <div className="text-center text-gray-500 bg-gray-50 p-4 rounded-xl border border-gray-200">
                       <p className="text-sm sm:text-base">
-                        ⏳ Waiting for lobby leader to start the game...
+                        Waiting for lobby leader to start the game...
                       </p>
                     </div>
                   )}

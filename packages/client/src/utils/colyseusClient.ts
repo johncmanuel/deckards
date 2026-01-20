@@ -1,4 +1,4 @@
-import { type  GameState, type LobbyOptions, Activity } from "@deckards/common";
+import { type GameState, type LobbyOptions, Activity } from "@deckards/common";
 import { Client, Room, type SeatReservation } from "colyseus.js";
 
 // Ensure colyseus is using the correct path when embedded in Discord

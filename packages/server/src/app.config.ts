@@ -4,7 +4,7 @@ import { playground } from "@colyseus/playground";
 import { JWT } from "@colyseus/auth";
 import { json } from "express";
 import type { DiscordTokenResponse, DiscordUser } from "@deckards/common";
-import { SelectedGame, Activity} from "@deckards/common";
+import { SelectedGame, Activity } from "@deckards/common";
 
 /**
  * Import your Room files
