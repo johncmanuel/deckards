@@ -1,18 +1,29 @@
 # deckards
 
-A collection of card game(s) playable as a Discord activity! Made with TypeScript, Bun, Colyseus.js. This was developed just to see how Discord activities work :)
+A collection of card game(s) playable as a Discord activity! Made with React, pixi.js, and Colyseus.js. This was developed just to see how Discord activities work :)
 
-<!-- Show demo here -->
-
-The Discord activity is not yet public, since additional requirements set by Discord need to be fulfilled to make this happen. Because of these criteria, there will be a way to play this game outside of Discord in the future.
+> The Discord activity is not yet public, since additional requirements set by Discord need to be fulfilled to make this happen. Because of these criteria, there will be a way to play this game outside of Discord in the future.
 
 ## Card Games List
 
 So far, only Blackjack is supported. Other card games, like BS, will be added soon.
 
+Blackjack demo:
+
+https://github.com/user-attachments/assets/f3f5ec29-7e82-4a79-b0f1-572cc20977eb
+
+
 ## Development Environment
 
-Set up
+Install [bun](https://bun.com/docs/installation). Then create your Discord application [here](https://discord.com/developers/applications).
+
+Create two `.env` files; one in `packages/client/` and another in `packages/server`. Both directories contain an `.env.example`. Copy the appropriate contents to the respective `.env` and fill in the values. Discord-related secrets can be obtained from the same site you created a Discord application on. `JWT_SECRET` for the server can be generated with the command:
+
+```bash
+bun jwt:gen
+```
+
+Copy the output and fill in the value for `JWT_SECRET`
 
 To install dependencies:
 
@@ -34,6 +45,27 @@ To reflect changes in `packages/common/`
 bun watch:common
 ```
 
+To test in Discord, use `cloudflared` to expose your client to the internet. This allows Discord to reach your client. Ensure you're running both the client and server.
+
+```bash
+bun cloudflared
+```
+
+You should see a snippet like this in the output here:
+```
+2026-01-20T19:14:18Z INF +--------------------------------------------------------------------------------------------+
+2026-01-20T19:14:18Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
+2026-01-20T19:14:18Z INF |  https://vintage-shuttle-balloon-reproduced.trycloudflare.com                              |
+2026-01-20T19:14:18Z INF +--------------------------------------------------------------------------------------------+
+```
+
+Paste the URL given to you for the following fields in the Discord application:
+
+Under: "OAuth2 → Redirect URL"
+Under: "URL Mappings → Target" for root mapping `/`
+
+Open the activity in Discord afterwards.
+
 This project was created using `bun init` in bun v1.3.5. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
 
 ## Deployment
@@ -54,3 +86,7 @@ If wanted, the server's container image can be manually built using the command 
 docker build -t <name-of-server> -f packages/server/Dockerfile .
 docker run -d <name-of-server>
 ```
+
+## References
+
+1. [https://github.com/colyseus/discord-activity/](https://github.com/colyseus/discord-activity/)
