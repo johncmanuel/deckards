@@ -1,6 +1,6 @@
 # deckards
 
-A collection of card games playable as a Discord activity! Made with TypeScript, Bun, Colyseus.js. This was developed just to see how Discord activities work :)
+A collection of card game(s) playable as a Discord activity! Made with TypeScript, Bun, Colyseus.js. This was developed just to see how Discord activities work :)
 
 <!-- Show demo here -->
 
